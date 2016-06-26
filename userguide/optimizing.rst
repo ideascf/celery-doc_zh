@@ -6,11 +6,11 @@
 
 Introduction
 ============
-The default configuration makes a lot of compromises.  It's not optimal for
-any single case, but works well enough for most situations.
+默认的配置做了很多妥协。这不是对于任意一个独立的案例都是最优的，但是适合大多数情况。
 
-There are optimizations that can be applied based on specific use cases.
+这里有一些针对特殊案例的优化。
 
+优化可以影响运行环境的不同属性（性能指标），如：任务的执行时间、内存使用、高性能是的响应速度。
 Optimizations can apply to different properties of the running environment,
 be it the time tasks take to execute, the amount of memory used, or
 responsiveness at times of high load.
@@ -18,25 +18,23 @@ responsiveness at times of high load.
 Ensuring Operations
 ===================
 
-In the book `Programming Pearls`_, Jon Bentley presents the concept of
-back-of-the-envelope calculations by asking the question;
+在`Programming Pearls`_书中，jon bentley 通过问下面的问题，提出了`back-of-the-envelope calculations` 理论:
 
     ❝ How much water flows out of the Mississippi River in a day? ❞
 
+这个练习 [*]_ 的目的是展示： 一个系统在一个时间片里能处理多少数据是有限制的。
+`Back of the envelope caculations` 可以作为一种提升时间效率的手段。
 The point of this exercise [*]_ is to show that there is a limit
 to how much data a system can process in a timely manner.
 Back of the envelope calculations can be used as a means to plan for this
 ahead of time.
 
-In Celery; If a task takes 10 minutes to complete,
-and there are 10 new tasks coming in every minute, the queue will never
-be empty.  This is why it's very important
-that you monitor queue lengths!
+在Celery里，如果一个任务需要10分钟来完成，并且每分钟有10个新任务产生，这个队列将永远也不会为空。
+这就是为什么监视队列长度，是非常重要的的原因。
 
-A way to do this is by :ref:`using Munin <monitoring-munin>`.
-You should set up alerts, that will notify you as soon as any queue has
-reached an unacceptable size.  This way you can take appropriate action
-like adding new worker nodes, or revoking unnecessary tasks.
+其中一种方案是使用:ref:`using Munin <monitoring-munin>`。
+你应该建立告警机制 —— 当队列长度到达一个不可接受的长度时，立即通知你。
+这样，你可以立即采取某种操作，比如：增加新的`worker`节点 或 移除不必要的任务。
 
 .. [*] The chapter is available to read for free here:
        `The back of the envelope`_.  The book is a classic text. Highly
@@ -57,40 +55,35 @@ General Settings
 librabbitmq
 -----------
 
-If you're using RabbitMQ (AMQP) as the broker then you can install the
-:mod:`librabbitmq` module to use an optimized client written in C:
+如果你正在使用RabbitMQ（AMQP）作为`broker`，你可以安装使用采用C编写的优化的 :mod:`librabbitmq` 模块:
 
 .. code-block:: bash
 
     $ pip install librabbitmq
 
-The 'amqp' transport will automatically use the librabbitmq module if it's
-installed, or you can also specify the transport you want directly by using
-the ``pyamqp://`` or ``librabbitmq://`` prefixes.
+如果 :mod:`librabbitmq` 已经安装，`AMQP transport` 将自动的使用该模块，
+或者，你可以使用``pyamqp://`` 或 ``librabbitmq://``前缀，来指定直接指定一个你想使用的.
 
 .. _optimizing-connection-pools:
 
 Broker Connection Pools
 -----------------------
 
-The broker connection pool is enabled by default since version 2.5.
+从版本2.5版本开始，`broker`的连接池默认被启用。
 
-You can tweak the :setting:`BROKER_POOL_LIMIT` setting to minimize
-contention, and the value should be based on the number of
-active threads/greenthreads using broker connections.
+你可以调整配置项 :setting:`BROKER_POOL_LIMIT`，去最小化竞争(to minimize contention)，
+并且这个值的设置，应该基于使用中间人连接的激活的线程数 或 greenthread数。
 
 .. _optimizing-transient-queues:
 
 Using Transient Queues
 ----------------------
 
-Queues created by Celery are persistent by default.  This means that
-the broker will write messages to disk to ensure that the tasks will
-be executed even if the broker is restarted.
+默认情况下，Celery创建的`queue`是持久化的。 这意味着：`broker`将会把`message`写入磁盘以确保即使`broker`被重启，
+这个`task`（消息对应的任务）也能被执行。
 
-But in some cases it's fine that the message is lost, so not all tasks
-require durability.  You can create a *transient* queue for these tasks
-to improve performance:
+但是某些情况下丢失`message`是无所谓的，所以不是所有的`task`都需要持久化。
+你可以为这些任务创建一个`transient` `queue`以提升性能:
 
 .. code-block:: python
 
@@ -103,18 +96,16 @@ to improve performance:
     )
 
 
-The ``delivery_mode`` changes how the messages to this queue are delivered.
-A value of 1 means that the message will not be written to disk, and a value
-of 2 (default) means that the message can be written to disk.
+``delivery_mode`` 决定发送到这个队列消息会被如何交付。
+1 意味着这个消息不会被写入磁盘，2（默认）意味这个消息会被写入磁盘。
 
-To direct a task to your new transient queue you can specify the queue
-argument (or use the :setting:`CELERY_ROUTES` setting):
+指引一个`task`到新的临时`queue`，你可以指定这个``queue``参数（或使用配置项 :setting:`CELERY_ROUTES`）
 
 .. code-block:: python
 
     task.apply_async(args, queue='transient')
 
-For more information see the :ref:`routing guide <guide-routing>`.
+了解更多详情，阅读 :ref:`routing guide <guide-routing>`
 
 .. _optimizing-worker-settings:
 
@@ -126,33 +117,28 @@ Worker Settings
 Prefetch Limits
 ---------------
 
-*Prefetch* is a term inherited from AMQP that is often misunderstood
-by users.
+*Prefetch* 是继承于`AMQP`的术语，但常常被用户误解。
 
-The prefetch limit is a **limit** for the number of tasks (messages) a worker
-can reserve for itself.  If it is zero, the worker will keep
+预取限制是一个`worker`它自己可以存储的`task`（message）数量的限制。
+如果被设置为0，`worker`将保持消费消息，不考虑可能有其它可用的职程节点可能已经（sooner, note1）处理了这些消息，或者说 这个消息可能根本不会装入内存。
+If it is zero, the worker will keep
 consuming messages, not respecting that there may be other
 available worker nodes that may be able to process them sooner [*]_,
 or that the messages may not even fit in memory.
 
-The workers' default prefetch count is the
-:setting:`CELERYD_PREFETCH_MULTIPLIER` setting multiplied by the number
-of concurrency slots[*]_ (processes/threads/greenthreads).
+`worker`的默认预取数量定义在配置项 :setting:`CELERYD_PREFETCH_MULTIPLIER` —— 几倍于并发数的倍数（进程/线程/协程）。
 
+如果你有大量的长持续时间的`task`，你可能需要设置倍数为1. 这意味着在每个`worker`进程同一时间将仅仅reserve一个`task`。
 If you have many tasks with a long duration you want
 the multiplier value to be 1, which means it will only reserve one
 task per worker process at a time.
 
-However -- If you have many short-running tasks, and throughput/round trip
-latency is important to you, this number should be large. The worker is
-able to process more tasks per second if the messages have already been
-prefetched, and is available in memory.  You may have to experiment to find
-the best value that works for you.  Values like 50 or 150 might make sense in
-these circumstances. Say 64, or 128.
+然而，如果你有大量的短执行时间的`task`，并且吞吐率和往返延时对你是非常重要的，
+那么这个倍速应该设置的较大。 如果消息已经被预取并且存在于内存中，那么`worker`每秒能够处理更多的`task`。
+你不得不在实践中去寻找最适合你的倍数。在这种场景下，倍数设置为50或150可能是更有效的，亦或64/128。
 
-If you have a combination of long- and short-running tasks, the best option
-is to use two worker nodes that are configured separately, and route
-the tasks according to the run-time. (see :ref:`guide-routing`).
+如果你既有长执行时间的任务，也有短执行时间的任务，最佳的方案是使用两个被独立配置的`worker`节点，
+并且根据执行时间来路由任务。参见 :ref:`guide-routing`。
 
 .. [*] RabbitMQ and other brokers deliver messages round-robin,
        so this doesn't apply to an active system.  If there is no prefetch
@@ -160,29 +146,26 @@ the tasks according to the run-time. (see :ref:`guide-routing`).
        nodes starting. If there are 3 offline nodes and one active node,
        all messages will be delivered to the active node.
 
-.. [*] This is the concurrency setting; :setting:`CELERYD_CONCURRENCY` or the
-       :option:`-c` option to the :program:`celery worker` program.
+.. [*] 并发相关的设置是：  配置项  :setting:`CELERYD_CONCURRENCY` 或 启动参数 :option:`-c`。
 
 
 Reserve one task at a time
 --------------------------
 
-When using early acknowledgement (default), a prefetch multiplier of 1
-means the worker will reserve at most one extra task for every active
-worker process.
+当采用`early acknowledgement`（默认的）时，预取倍数1,意味着这个`worker`的每个进程将至多reserve
+一个额外的任务。
 
-When users ask if it's possible to disable "prefetching of tasks", often
-what they really want is to have a worker only reserve as many tasks as there
-are child processes.
+当用户询问是否可以禁用"任务预取"时，通常他们真正想要的是让`worker`，仅仅reserve子进程
+(译者注：不一定时进程也有可能时线程和协程)数量的任务数。
 
-But this is not possible without enabling late acknowledgements
-acknowledgements; A task that has been started, will be
-retried if the worker crashes mid execution so the task must be `idempotent`_
-(see also notes at :ref:`faq-acks_late-vs-retry`).
+但是，不启用`late acknowledgement`，实现没有执行完成的`task`重试，这是不可能实现的。
+（译者注：early acknowledgement会在收到任务后，立即发送ack，即又去取新的任务。也就是：一个正在执行的task（已经ack了的），和一个预取的task（还没有ack的））。
+对于一个已经开始的`task`，如果这个`worker`在执行过程中crash，那么这个任务将被重试，所以这个任务必须是`idempotent`_幂等的。
+（查阅 :ref:`faq-acks_late-vs-retry`）
 
 .. _`idempotent`: http://en.wikipedia.org/wiki/Idempotent
 
-You can enable this behavior by using the following configuration options:
+你可以通过使用如下配置选项来启用这个行为:
 
 .. code-block:: python
 
@@ -194,12 +177,10 @@ You can enable this behavior by using the following configuration options:
 Prefork pool prefetch settings
 ------------------------------
 
-The prefork pool will asynchronously send as many tasks to the processes
-as it can and this means that the processes are, in effect, prefetching
-tasks.
+`prefork pool` 将异步的发送尽可能多的`task`到processes，这意味着，
+事实上，进程在预取`task`（译者注： 因为buffer的存在，任务被发送到了进程的pipe  buffer中）
 
-This benefits performance but it also means that tasks may be stuck
-waiting for long running tasks to complete::
+这对性能是有好处的，但是它也意味着任务可能因为等待其它耗时任务完成，而被卡住::
 
     -> send T1 to Process A
     # A executes T1
@@ -211,17 +192,13 @@ waiting for long running tasks to complete::
     # A still executing T1, T3 stuck in local buffer and
     # will not start until T1 returns
 
-The worker will send tasks to the process as long as the pipe buffer is
-writable.  The pipe buffer size varies based on the operating system: some may
-have a buffer as small as 64kb but on recent Linux versions the buffer
-size is 1MB (can only be changed system wide).
+`worker`将会发送`task`到这些进程 —— 只要它的`pipe buffer`可写。`pipe buffer`的容量基于操作系统：
+有些可能只有64Kb，但是在最新的linux版本中，这个buffer的容量是1MB（仅仅能被系统级的修改）。
 
-You can disable this prefetching behavior by enabling the :option:`-Ofair`
-worker option:
+你可以通过启用celery worker的:option:`-0fair`选项，来禁用这个预取行为
 
 .. code-block:: bash
 
     $ celery -A proj worker -l info -Ofair
 
-With this option enabled the worker will only write to processes that are
-available for work, disabling the prefetch behavior.
+使用这个选项的`worker`，将仅仅写到那些可以立即执行`task`的进程，即禁用预取行为。
