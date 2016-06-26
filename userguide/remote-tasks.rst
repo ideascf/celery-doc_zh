@@ -14,39 +14,37 @@
 Basics
 ======
 
-If you need to call into another language, framework or similar, you can
-do so by using HTTP callback tasks.
+如果你需要调用另一个语言、框架或类似的东西，你可以使用HTTP callback tasks。
 
-The HTTP callback tasks uses GET/POST data to pass arguments and returns
-result as a JSON response. The scheme to call a task is::
+
+HTTP callback tasks使用GET/POST数据去传递参数，并一JSON作为响应数据。
+以这种方式调用task如下::
 
     GET http://example.com/mytask/?arg1=a&arg2=b&arg3=c
 
-or using POST::
+或使用POST请求::
 
     POST http://example.com/mytask
 
 .. note::
 
-    POST data needs to be form encoded.
+    POST的数据需要使用form encoded。
 
-Whether to use GET or POST is up to you and your requirements.
+使用GET还是POST，取决与你以及你的需求。
 
-The web page should then return a response in the following format
-if the execution was successful::
+如果执行成功，web页面应该以如下格式返回一个响应::
 
     {'status': 'success', 'retval': …}
 
-or if there was an error::
+如果执行失败，则::
 
     {'status': 'failure', 'reason': 'Invalid moon alignment.'}
 
 Enabling the HTTP task
 ----------------------
 
-To enable the HTTP dispatch task you have to add :mod:`celery.task.http`
-to :setting:`CELERY_IMPORTS`, or start the worker with ``-I
-celery.task.http``.
+为了启用HTTP 派发任务，你必须增加:mod:`celery.task.http`到配置项
+:setting:`CELERY_IMPORTS`中，或者在启动worker的时候使用参数 ``-I celery.task.http``。
 
 
 .. _webhook-django-example:
@@ -54,7 +52,7 @@ celery.task.http``.
 Django webhook example
 ======================
 
-With this information you could define a simple task in Django:
+利用以上信息，你可以在Django中定义一个简单的`task`:
 
 .. code-block:: python
 
@@ -87,23 +85,21 @@ or in Ruby on Rails:
         render :json => @status
     end
 
-You can easily port this scheme to any language/framework;
-new examples and libraries are very welcome.
+你可以轻松的移植这个方案到任何语言/框架；欢迎更多的样例和库示例。
 
 .. _webhook-calling:
 
 Calling webhook tasks
 =====================
 
-To call a task you can use the :class:`~celery.task.http.URL` class:
+使用 :class:`~celery.task.http.URL`类，调用`task`：
 
     >>> from celery.task.http import URL
     >>> res = URL('http://example.com/multiply').get_async(x=10, y=10)
 
 
-:class:`~celery.task.http.URL` is a shortcut to the :class:`HttpDispatchTask`.
-You can subclass this to extend the
-functionality.
+:class:`~celery.task.http.URL`是使用 :class:`HttpDispatchTask` 的快捷方式。
+你可以子类化它去扩展功能。
 
     >>> from celery.task.http import HttpDispatchTask
     >>> res = HttpDispatchTask.delay(
@@ -112,14 +108,11 @@ functionality.
     >>> res.get()
     100
 
-The output of :program:`celery worker` (or the log file if enabled) should show the
-task being executed::
+:program:`celery worker` 的输出（或者日志文件，如果启用了）,应该显示这个被执行了的`task`::
 
     [INFO/MainProcess] Task celery.task.http.HttpDispatchTask
             [f2cc8efc-2a14-40cd-85ad-f1c77c94beeb] processed: 100
 
-Since calling tasks can be done via HTTP using the
-:func:`djcelery.views.apply` view, calling tasks from other languages is easy.
-For an example service exposing tasks via HTTP you should have a look at
-`examples/celery_http_gateway` in the Celery distribution:
-http://github.com/celery/celery/tree/master/examples/celery_http_gateway/
+由于可以通过HTTP使用:func:`djcelery.views.apply` 来调用`task`，所以从其他语言调用`task`时非常容易的。
+你应该在Celery的发布页面(http://github.com/celery/celery/tree/master/examples/celery_http_gateway/)
+中阅读`examples/celery_http_gateway` 来获取一个使用HTTP的task示例。
