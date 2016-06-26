@@ -1,50 +1,49 @@
 .. _broker-rabbitmq:
 
 ================
- Using RabbitMQ
+使用 RabbitMQ
 ================
 
 .. contents::
     :local:
 
-Installation & Configuration
+.. _installation-and-configuration
+
+安装与配置
 ============================
 
-RabbitMQ is the default broker so it does not require any additional
-dependencies or initial configuration, other than the URL location of
-the broker instance you want to use::
+RabbitMQ 是默认的中间人，所以除了需要你要使用的中间人实例的 URL 位置，
+它并不需要任何额外的依赖或起始配置::
 
     >>> BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
-For a description of broker URLs and a full list of the
-various broker configuration options available to Celery,
-see :ref:`conf-broker-settings`.
+Celery 中间人 URL 的描述和完整的中间人可用配置选项列表见
+:ref:`conf-broker-settings` 。
 
 .. _installing-rabbitmq:
 
-Installing the RabbitMQ Server
+安装 RabbitMQ 服务器
 ==============================
 
-See `Installing RabbitMQ`_ over at RabbitMQ's website. For Mac OS X
-see `Installing RabbitMQ on OS X`_.
+见 RabbitMQ 网站上的 `安装 RabbitMQ <Installing RabbitMQ>`_ 。Mac OS X 用户
+，则请见 `在 OS X 上安装 RabbitMQ <rabbitmq-osx-installation>`_ 。
 
 .. _`Installing RabbitMQ`: http://www.rabbitmq.com/install.html
 
 .. note::
 
-    If you're getting `nodedown` errors after installing and using
-    :program:`rabbitmqctl` then this blog post can help you identify
-    the source of the problem:
+    如果你在安装和使用 :program:`rabbitmqctl` 后遇到了 `nodedown` 错
+    误，那么这篇文章可以帮助你找到错误的来源:
 
         http://somic.org/2009/02/19/on-rabbitmqctl-and-badrpcnodedown/
 
 .. _rabbitmq-configuration:
 
-Setting up RabbitMQ
+设置 RabbitMQ
 -------------------
 
-To use celery we need to create a RabbitMQ user, a virtual host and
-allow that user access to that virtual host:
+要使用 Celery，我们需要创建一个 RabbitMQ 用户、一个虚拟主机，并且
+允许这个用户访问这个虚拟主机：
 
 .. code-block:: bash
 
@@ -56,13 +55,10 @@ allow that user access to that virtual host:
 
 .. code-block:: bash
 
-    $ sudo rabbitmqctl set_user_tags myuser mytag
-
-.. code-block:: bash
-
     $ sudo rabbitmqctl set_permissions -p myvhost myuser ".*" ".*" ".*"
 
-See the RabbitMQ `Admin Guide`_ for more information about `access control`_.
+关于  `访问控制 <access control>`_ 的更多信息见 RabbitMQ 的
+`管理员指南 <Admin Guide>`_ 。
 
 .. _`Admin Guide`: http://www.rabbitmq.com/admin-guide.html
 
@@ -70,56 +66,69 @@ See the RabbitMQ `Admin Guide`_ for more information about `access control`_.
 
 .. _rabbitmq-osx-installation:
 
-Installing RabbitMQ on OS X
+在 OS X 上安装 RabbitMQ
 ---------------------------
 
-The easiest way to install RabbitMQ on OS X is using `Homebrew`_ the new and
-shiny package management system for OS X.
+在 Snow Leopard 上安装 RabbitMQ 最简单的方式就是 `Homebrew`_ ——OS X 上的一款
+新颖别致，光彩动人的包管理系统。
 
-First, install homebrew using the one-line command provided by the `Homebrew
-documentation`_:
+在本例中，我们将把 Homebrew 安装到 :file:`/lol` ，但你可以选择任意位置，
+如果你想，甚至可以是你的用户根目录，Homebrew 的强大之处之一就是可以重定址。
+
+
+Homebrew 实际上是一个 `git`_ 仓库，所以要安装 Homebrew，你首先需要安装 git。
+从 http://code.google.com/p/git-osx-installer/downloads/list?can=3 下载并安装
+磁盘映像。
+
+当安装好 git 后，你终于可以克隆这个仓库到 :file:`/lol` ：
 
 .. code-block:: bash
 
-    ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+    $ git clone git://github.com/mxcl/homebrew /lol
 
-Finally, we can install rabbitmq using :program:`brew`:
+Brew 包含一个简单的工具称为 :program:`brew` ，用于安装、移除和查询包。为了使
+用它，你需要先把它添加到 :envvar:`PATH` 中。可以把下面的这行添加到你的
+:file:`~/.profile` 末尾来实现：
+
+.. code-block:: bash
+
+    export PATH="/lol/bin:/lol/sbin:$PATH"
+
+保存并重新加载：
+
+.. code-block:: bash
+
+    $ source ~/.profile
+
+你终于可以用 :program:`brew` 安装 RabbitMQ 了：
 
 .. code-block:: bash
 
     $ brew install rabbitmq
 
 .. _`Homebrew`: http://github.com/mxcl/homebrew/
-.. _`Homebrew documentation`: https://github.com/Homebrew/homebrew/wiki/Installation
+.. _`git`: http://git-scm.org
 
 .. _rabbitmq-osx-system-hostname:
 
-After you have installed rabbitmq with brew you need to add the following to your path to be able to start and stop the broker. Add it to your .bash_profile or .profile
-
-.. code-block:: bash
-
-    `PATH=$PATH:/usr/local/sbin`
-
-Configuring the system host name
+配置系统的主机名
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you're using a DHCP server that is giving you a random host name, you need
-to permanently configure the host name. This is because RabbitMQ uses the host name
-to communicate with nodes.
+如果你使用了 DHCP 服务器，它会给你分配一个随机的主机名，那么你需要设置一个永久
+的主机名。这是因为 RabbitMQ 通过主机名来与节点通信。
 
-Use the :program:`scutil` command to permanently set your host name:
+使用 :program:`scutil` 命令来永久修改主机名：
 
 .. code-block:: bash
 
     $ sudo scutil --set HostName myhost.local
 
-Then add that host name to :file:`/etc/hosts` so it's possible to resolve it
-back into an IP address::
+然后把主机名加入到 :file:`/etc/hosts` 中，这样才能解析到 IP 地址::
 
     127.0.0.1       localhost myhost myhost.local
 
-If you start the rabbitmq server, your rabbit node should now be `rabbit@myhost`,
-as verified by :program:`rabbitmqctl`:
+如果你启用了 RabbitMQ 服务器，你的 Rabbit 节点现在应被 :program:`rabbitmqctl`
+识别为 `rabbit@myhost` 。
 
 .. code-block:: bash
 
@@ -135,33 +144,35 @@ as verified by :program:`rabbitmqctl`:
     {running_nodes,[rabbit@myhost]}]
     ...done.
 
-This is especially important if your DHCP server gives you a host name
-starting with an IP address, (e.g. `23.10.112.31.comcast.net`), because
-then RabbitMQ will try to use `rabbit@23`, which is an illegal host name.
+如果你的 DHCP 分配的主机名以 IP 地址开头这就尤其重要（例如
+`23.10.112.31.comcast.net` ），因为 RabbitMQ 会试图访问 `rabbit@23` ，
+而这是一个非法的主机名。
 
 .. _rabbitmq-osx-start-stop:
 
-Starting/Stopping the RabbitMQ server
+启动/停止 RabbitMQ 服务器
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To start the server:
+启动服务器：
 
 .. code-block:: bash
 
     $ sudo rabbitmq-server
 
-you can also run it in the background by adding the :option:`-detached` option
-(note: only one dash):
+你也可以添加 :option:`-detached` 属性来让它在后台运行（注意：只有一
+个破折号）：
+
 
 .. code-block:: bash
 
     $ sudo rabbitmq-server -detached
 
-Never use :program:`kill` to stop the RabbitMQ server, but rather use the
-:program:`rabbitmqctl` command:
+永远不要用 :program:`kill` 停止 RabbitMQ 服务器，而是应该用
+:program:`rabbitmqctl` 命令：
 
 .. code-block:: bash
 
     $ sudo rabbitmqctl stop
 
-When the server is running, you can continue reading `Setting up RabbitMQ`_.
+当服务器正常运行后，你可以继续阅读
+When the server is running, you can continue reading :ref:`rabbitmq-configuration` 。

@@ -1,85 +1,80 @@
 .. _intro:
 
 ========================
- Introduction to Celery
+Celery 简介
 ========================
 
 .. contents::
     :local:
     :depth: 1
 
-What is a Task Queue?
+何为任务队列？
 =====================
 
-Task queues are used as a mechanism to distribute work across threads or
-machines.
+任务队列是一种在线程或机器间分发任务的机制。
 
-A task queue's input is a unit of work called a task. Dedicated worker
-processes constantly monitor task queues for new work to perform.
+消息队列的输入是工作的一个单元，称为任务，独立的职程（Worker）进程持续
+监视队列中是否有需要处理的新任务。
 
-Celery communicates via messages, usually using a broker
-to mediate between clients and workers.  To initiate a task, a client adds a
-message to the queue, which the broker then delivers to a worker.
+Celery 用消息通信，通常使用中间人（Broker）在客户端和职程间斡旋。这个过程
+从客户端向队列添加消息开始，之后中间人把消息派送给职程。
 
-A Celery system can consist of multiple workers and brokers, giving way
-to high availability and horizontal scaling.
+Celery 系统可包含多个职程和中间人，以此获得高可用性和横向扩展能力。
 
-Celery is written in Python, but the protocol can be implemented in any
-language.  So far there's RCelery_ for the Ruby programming language,
-node-celery_ for Node.js and a `PHP client`_. Language interoperability can also be achieved
-by :ref:`using webhooks <guide-webhooks>`.
+Celery 是用 Python 编写的，但协议可以用任何语言实现。迄今，已有 Ruby 实现
+的 RCelery_ 、node.js 实现的 node-celery_ 以及一个 `PHP 客户端`_ ，语言
+互通也可以通过 :ref:`using webhooks <guide-webhooks>` 实现。
+
 
 .. _RCelery: http://leapfrogdevelopment.github.com/rcelery/
-.. _`PHP client`: https://github.com/gjedeer/celery-php
+.. _`PHP 客户端`: https://github.com/gjedeer/celery-php
 .. _node-celery: https://github.com/mher/node-celery
 
-What do I need?
+我需要什么？
 ===============
 
-.. sidebar:: Version Requirements
-    :subtitle: Celery version 3.0 runs on
+.. sidebar:: 版本需求
+    :subtitle: Celery 的 3.0 版本可运行在
 
     - Python ❨2.5, 2.6, 2.7, 3.2, 3.3❩
     - PyPy ❨1.8, 1.9❩
     - Jython ❨2.5, 2.7❩.
 
-    This is the last version to support Python 2.5,
-    and from the next version Python 2.6 or newer is required.
-    The last version to support Python 2.4 was Celery series 2.2.
+    这是最后一个支持 Python 2.5 的版本，也即从下个版本需要
+    Python 2.6 或更新版本的 Python。最后一个支持 Python 2.4
+    的版本为 Celery 2.2 系列。
 
-*Celery* requires a message transport to send and receive messages.
-The RabbitMQ and Redis broker transports are feature complete,
-but there's also support for a myriad of other experimental solutions, including
-using SQLite for local development.
+*Celery* 需要一个发送和接受消息的传输者。RabbitMQ 和 Redis 中间人
+的消息传输支持所有特性，但也提供大量其他实验性方案的支持，包括
+用 SQLite 进行本地开发。
 
-*Celery* can run on a single machine, on multiple machines, or even
-across data centers.
+*Celery* 可以单机运行，也可以在多台机器上运行，甚至可以跨越数据中心运行。
 
-Get Started
+上手
 ===========
 
-If this is the first time you're trying to use Celery, or you are
-new to Celery 3.0 coming from previous versions then you should read our
-getting started tutorials:
+如果这是你第一次尝试 Celery，或你从以前版本刚步入 Celery 3.0，那么你应该
+阅读一下我们的入门教程：
 
 - :ref:`first-steps`
 - :ref:`next-steps`
 
-Celery is…
-==========
+Celery 是…
+==============
 
 .. _`mailing-list`: http://groups.google.com/group/celery-users
 
 .. topic:: \ 
 
-    - **Simple**
+    - **简单**
 
-        Celery is easy to use and maintain, and it *doesn't need configuration files*.
+        Celery 易于使用和维护，并且它 *不需要配置文件* 。
 
-        It has an active, friendly community you can talk to for support,
-        including a `mailing-list`_ and an :ref:`IRC channel <irc-channel>`.
+        Celery 有一个活跃、友好的社区来让你寻求帮助，包括一个
+        `邮件列表 <mailing-list>`_ 和一个 :ref:`IRC 频道 <irc-channel>` 。
 
-        Here's one of the simplest applications you can make:
+
+        下面是一个你可以实现的最简应用：
 
         .. code-block:: python
 
@@ -91,58 +86,56 @@ Celery is…
             def hello():
                 return 'hello world'
 
-    - **Highly Available**
+    - **高可用性**
 
-        Workers and clients will automatically retry in the event
-        of connection loss or failure, and some brokers support
-        HA in way of *Master/Master* or *Master/Slave* replication.
+        倘若连接丢失或失败，职程和客户端会自动重试，并且一些中间人
+        通过 *主/主* 或 *主/从* 方式复制来提高可用性。
 
-    - **Fast**
+    - **快速**
 
-        A single Celery process can process millions of tasks a minute,
-        with sub-millisecond round-trip latency (using RabbitMQ,
-        py-librabbitmq, and optimized settings).
+        单个 Celery 进程每分钟可处理数以百万计的任务，而保持往返延迟
+        在亚毫秒级（使用 RabbitMQ、py-librabbitmq 和优化过的设置）。
 
-    - **Flexible**
+    - **灵活**
 
-        Almost every part of *Celery* can be extended or used on its own,
-        Custom pool implementations, serializers, compression schemes, logging,
-        schedulers, consumers, producers, autoscalers, broker transports and much more.
+        *Celery* 几乎所有部分都可以扩展或单独使用。可以自制连接池、
+        序列化、压缩模式、日志、调度器、消费者、生产者、自动扩展、
+        中间人传输或更多。
 
 
-.. topic:: It supports
+.. topic:: 它支持
 
     .. hlist::
         :columns: 2
 
-        - **Brokers**
+        - **中间人**
 
             - :ref:`RabbitMQ <broker-rabbitmq>`, :ref:`Redis <broker-redis>`,
-            - :ref:`MongoDB <broker-mongodb>` (exp), ZeroMQ (exp)
-            - :ref:`CouchDB <broker-couchdb>` (exp), :ref:`SQLAlchemy <broker-sqlalchemy>` (exp)
-            - :ref:`Django ORM <broker-django>` (exp), :ref:`Amazon SQS <broker-sqs>`, (exp)
-            - and more…
+            - :ref:`MongoDB <broker-mongodb>` （实验性）, ZeroMQ （实验性）
+            - :ref:`CouchDB <broker-couchdb>` （实验性）, :ref:`SQLAlchemy <broker-sqlalchemy>` （实验性）
+            - :ref:`Django ORM <broker-django>` （实验性）, :ref:`Amazon SQS <broker-sqs>`, （实验性）
+            - 还有更多…
 
-        - **Concurrency**
+        - **并发**
 
-            - prefork (multiprocessing),
+            - prefork（多进程）,
             - Eventlet_, gevent_
-            - threads/single threaded
+            - 多线程/单线程
 
-        - **Result Stores**
+        - **结果存储**
 
             - AMQP, Redis
             - memcached, MongoDB
             - SQLAlchemy, Django ORM
             - Apache Cassandra
 
-        - **Serialization**
+        - **序列化**
 
-            - *pickle*, *json*, *yaml*, *msgpack*.
-            - *zlib*, *bzip2* compression.
-            - Cryptographic message signing.
+            - *pickle*, *json*, *yaml*, *msgpack*
+            - *zlib*, *bzip2* 压缩
+            - 密码学消息签名
 
-Features
+特性
 ========
 
 .. topic:: \ 
@@ -150,80 +143,69 @@ Features
     .. hlist::
         :columns: 2
 
-        - **Monitoring**
+        - **监视**
 
-            A stream of monitoring events is emitted by workers and
-            is used by built-in and external tools to tell you what
-            your cluster is doing -- in real-time.
+            整条流水线的监视时间由职程发出，并用于内建或外部的工具
+            告知你集群的工作状况——而且是实时的。
 
-            :ref:`Read more… <guide-monitoring>`.
+            :ref:`深入了解… <guide-monitoring>`.
 
-        - **Workflows**
+        - **工作流**
 
-            Simple and complex workflows can be composed using
-            a set of powerful primitives we call the "canvas",
-            including grouping, chaining, chunking and more.
+            一系列功能强大的称为“Canvas”的原语（Primitive）用于构建
+            或简单、或复杂的工作流。包括分组、连锁、分割等等。
 
-            :ref:`Read more… <guide-canvas>`.
+            :ref:`深入了解… <guide-canvas>`.
 
-        - **Time & Rate Limits**
+        - **时间和速率限制**
 
-            You can control how many tasks can be executed per second/minute/hour,
-            or how long a task can be allowed to run, and this can be set as
-            a default, for a specific worker or individually for each task type.
+            你可以控制每秒/分钟/小时执行的任务数，或任务的最长运行时间，
+            并且可以为特定职程或不同类型的任务设置为默认值。
 
-            :ref:`Read more… <worker-time-limits>`.
+            :ref:`深入了解… <worker-time-limits>`.
 
-        - **Scheduling**
+        - **计划任务**
 
-            You can specify the time to run a task in seconds or a
-            :class:`~datetime.datetime`, or or you can use
-            periodic tasks for recurring events based on a
-            simple interval, or crontab expressions
-            supporting minute, hour, day of week, day of month, and
-            month of year.
+            你可以指定任务在若干秒后或在 :class:`~datetime.datetime`
+            运行，或你可以基于单纯的时间间隔或支持分钟、小时、每周的第
+            几天、每月的第几天以及每年的第几月的 crontab 表达式来使用
+            周期任务来重现事件。
 
-            :ref:`Read more… <guide-beat>`.
+            :ref:`深入了解… <guide-beat>`.
 
-        - **Autoreloading**
+        - **自动重载入**
 
-            In development workers can be configured to automatically reload source
-            code as it changes, including :manpage:`inotify(7)` support on Linux.
+            在开发中，职程可以配置为在源码修改时自动重载入，包含对 Linux
+            上的 :manpage:`inotify(7)` 支持。
 
-            :ref:`Read more… <worker-autoreloading>`.
+            :ref:`深入了解… <worker-autoreloading>`.
 
-        - **Autoscaling**
+        - **自动扩展**
 
-            Dynamically resizing the worker pool depending on load,
-            or custom metrics specified by the user, used to limit
-            memory usage in shared hosting/cloud environments or to
-            enforce a given quality of service.
+            根据负载自动重调职程池的大小或用户指定的测量值，用于限制
+            共享主机/云环境的内存使用，或是保证给定的服务质量。
 
-            :ref:`Read more… <worker-autoscaling>`.
+            :ref:`深入了解…  <worker-autoscaling>`.
 
-        - **Resource Leak Protection**
+        - **资源泄露保护**
 
-            The :option:`--maxtasksperchild` option is used for user tasks
-            leaking resources, like memory or file descriptors, that
-            are simply out of your control.
+            :option:`--maxtasksperchild` 选项用于控制用户任务泄露的诸如
+            内存或文件描述符这些易超出掌控的资源。
 
-            :ref:`Read more… <worker-maxtasksperchild>`.
+            :ref:`深入了解… <worker-maxtasksperchild>`.
 
-        - **User Components**
+        - **用户组件**
 
-            Each worker component can be customized, and additional components
-            can be defined by the user.  The worker is built up using "bootsteps" — a
-            dependency graph enabling fine grained control of the worker's
-            internals.
+            每个职程组件都可以自定义，并且额外组件可以由用户定义。职程是用
+            “bootsteps” 构建的——一个允许细粒度控制职程内构件的依赖图。
 
 .. _`Eventlet`: http://eventlet.net/
 .. _`gevent`: http://gevent.org/
 
-Framework Integration
+框架集成
 =====================
 
-Celery is easy to integrate with web frameworks, some of which even have
-integration packages:
+Celery 易于与 Web 框架集成，其中的一些甚至已经有了集成包：
 
     +--------------------+------------------------+
     | `Django`_          | `django-celery`_       |
@@ -232,16 +214,15 @@ integration packages:
     +--------------------+------------------------+
     | `Pylons`_          | `celery-pylons`_       |
     +--------------------+------------------------+
-    | `Flask`_           | not needed             |
+    | `Flask`_           | 不需要                 |
     +--------------------+------------------------+
     | `web2py`_          | `web2py-celery`_       |
     +--------------------+------------------------+
     | `Tornado`_         | `tornado-celery`_      |
     +--------------------+------------------------+
 
-The integration packages are not strictly necessary, but they can make
-development easier, and sometimes they add important hooks like closing
-database connections at :manpage:`fork(2)`.
+集成包并非是严格必要的，但它们让开发更简便，并且有时它们在
+:manpage:`fork(2)` 上添加了比如关闭数据库连接这样的重要回调。
 
 .. _`Django`: http://djangoproject.com/
 .. _`Pylons`: http://pylonshq.com/
@@ -256,61 +237,61 @@ database connections at :manpage:`fork(2)`.
 .. _`Tornado`: http://www.tornadoweb.org/
 .. _`tornado-celery`: http://github.com/mher/tornado-celery/
 
-Quickjump
+快速跳转
 =========
 
-.. topic:: I want to ⟶
+.. topic:: 我想要阅读⟶
 
     .. hlist::
         :columns: 2
 
-        - :ref:`get the return value of a task <task-states>`
-        - :ref:`use logging from my task <task-logging>`
-        - :ref:`learn about best practices <task-best-practices>`
-        - :ref:`create a custom task base class <task-custom-classes>`
-        - :ref:`add a callback to a group of tasks <canvas-chord>`
-        - :ref:`split a task into several chunks <canvas-chunks>`
-        - :ref:`optimize the worker <guide-optimizing>`
-        - :ref:`see a list of built-in task states <task-builtin-states>`
-        - :ref:`create custom task states <custom-states>`
-        - :ref:`set a custom task name <task-names>`
-        - :ref:`track when a task starts <task-track-started>`
-        - :ref:`retry a task when it fails <task-retry>`
-        - :ref:`get the id of the current task <task-request-info>`
-        - :ref:`know what queue a task was delivered to <task-request-info>`
-        - :ref:`see a list of running workers <monitoring-control>`
-        - :ref:`purge all messages <monitoring-control>`
-        - :ref:`inspect what the workers are doing <monitoring-control>`
-        - :ref:`see what tasks a worker has registerd <monitoring-control>`
-        - :ref:`migrate tasks to a new broker <monitoring-control>`
-        - :ref:`see a list of event message types <event-reference>`
-        - :ref:`contribute to Celery <contributing>`
-        - :ref:`learn about available configuration settings <configuration>`
-        - :ref:`receive email when a task fails <conf-error-mails>`
-        - :ref:`get a list of people and companies using Celery <res-using-celery>`
-        - :ref:`write my own remote control command <worker-custom-control-commands>`
-        - :ref:`change worker queues at runtime <worker-queues>`
+        - :ref:`获取任务的返回值 <task-states>`
+        - :ref:`在任务中使用日志 <task-logging>`
+        - :ref:`学习最佳实践 <task-best-practices>`
+        - :ref:`创建自定义的任务基类 <task-custom-classes>`
+        - :ref:`向一组任务添加回调 <canvas-chord>`
+        - :ref:`分割任务 <canvas-chunks>`
+        - :ref:`优化职程 <guide-optimizing>`
+        - :ref:`内建的任务状态列表 <task-builtin-states>`
+        - :ref:`创建自定义任务状态 <custom-states>`
+        - :ref:`设置自定义任务名称 <task-names>`
+        - :ref:`跟踪开始任务 <task-track-started>`
+        - :ref:`重试失败任务 <task-retry>`
+        - :ref:`获取当前任务 ID <task-request-info>`
+        - :ref:`获知任务分派到的队列 <task-request-info>`
+        - :ref:`查看运行中职程列表 <monitoring-control>`
+        - :ref:`清空消息 <monitoring-control>`
+        - :ref:`检视职程的工作状况 <monitoring-control>`
+        - :ref:`查看职程上注册的任务 <monitoring-control>`
+        - :ref:`迁移任务到新中间人 <monitoring-control>`
+        - :ref:`事件消息类型列表 <event-reference>`
+        - :ref:`为 Celery 做贡献 <contributing>`
+        - :ref:`配置设定的可用字段 <configuration>`
+        - :ref:`任务失败的邮件通知 <conf-error-mails>`
+        - :ref:`Celery 使用案例 <res-using-celery>`
+        - :ref:`自制远程控制命令 <worker-custom-control-commands>`
+        - :ref:`运行时修改职程的队列 <worker-queues>`
 
-.. topic:: Jump to ⟶
+.. topic:: 跳转至 ⟶
 
     .. hlist::
         :columns: 4
 
-        - :ref:`Brokers <brokers>`
-        - :ref:`Applications <guide-app>`
-        - :ref:`Tasks <guide-tasks>`
-        - :ref:`Calling <guide-calling>`
-        - :ref:`Workers <guide-workers>`
-        - :ref:`Daemonizing <daemonizing>`
-        - :ref:`Monitoring <guide-monitoring>`
-        - :ref:`Optimizing <guide-optimizing>`
-        - :ref:`Security <guide-security>`
-        - :ref:`Routing <guide-routing>`
-        - :ref:`Configuration <configuration>`
+        - :ref:`中间人 <brokers>`
+        - :ref:`应用 <guide-app>`
+        - :ref:`任务 <guide-tasks>`
+        - :ref:`调用 <guide-calling>`
+        - :ref:`职程 <guide-workers>`
+        - :ref:`后台运行 <daemonizing>`
+        - :ref:`监视 <guide-monitoring>`
+        - :ref:`优化 <guide-optimizing>`
+        - :ref:`安全 <guide-security>`
+        - :ref:`路由 <guide-routing>`
+        - :ref:`配置 <configuration>`
         - :ref:`Django <django>`
-        - :ref:`Contributing <contributing>`
-        - :ref:`Signals <signals>`
+        - :ref:`贡献 <contributing>`
+        - :ref:`信号 <signals>`
         - :ref:`FAQ <faq>`
-        - :ref:`API Reference <apiref>`
+        - :ref:`API 参考 <apiref>`
 
 .. include:: ../includes/installation.txt

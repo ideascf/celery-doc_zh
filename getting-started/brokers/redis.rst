@@ -1,17 +1,17 @@
 .. _broker-redis:
 
 =============
- Using Redis
+使用 Redis
 =============
 
 .. _broker-redis-installation:
 
-Installation
+安装
 ============
 
-For the Redis support you have to install additional dependencies.
-You can install both Celery and these dependencies in one go using
-the ``celery[redis]`` :ref:`bundle <bundles>`:
+对 Redis 的支持需要额外的依赖。你可以用 ``celery[redis]``
+:ref:`捆绑 <bundles>` 同时安装 Celery 和这些依赖：
+
 
 .. code-block:: bash
 
@@ -19,126 +19,96 @@ the ``celery[redis]`` :ref:`bundle <bundles>`:
 
 .. _broker-redis-configuration:
 
-Configuration
+配置
 =============
 
-Configuration is easy, just configure the location of
-your Redis database::
+配置非常简单，只需要设置 Redis 数据库的位置::
 
     BROKER_URL = 'redis://localhost:6379/0'
 
-Where the URL is in the format of::
+URL 的格式为::
 
     redis://:password@hostname:port/db_number
 
-all fields after the scheme are optional, and will default to localhost on port 6379,
-using database 0.
-
-If a unix socket connection should be used, the URL needs to be in the format::
-
-    redis+socket:///path/to/redis.sock
+URL Scheme 后的所有字段都是可选的，并且默认为 localhost 的 6479 端口，使用
+数据库 0。
 
 .. _redis-visibility_timeout:
 
-Visibility Timeout
+可见性超时
 ------------------
 
-The visibility timeout defines the number of seconds to wait
-for the worker to acknowledge the task before the message is redelivered
-to another worker.  Be sure to see :ref:`redis-caveats` below.
+可见性超时时间定义了等待职程在消息分派到其他职程之前确认收到任务的秒数。一
+定要阅读下面的 :ref:`redis-caveats` 一节。
 
-This option is set via the :setting:`BROKER_TRANSPORT_OPTIONS` setting::
+
+这个选项通过 :setting:`BROKER_TRANSPORT_OPTIONS` 设置::
 
     BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}  # 1 hour.
 
-The default visibility timeout for Redis is 1 hour.
+Redis 的默认可见性超时时间是 1 小时。
 
 .. _redis-results-configuration:
 
-Results
+结果
 -------
 
-If you also want to store the state and return values of tasks in Redis,
-you should configure these settings::
+如果你也想在 Redis 中存储任务的状态和返回值，你应该配置这些选项::
 
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-For a complete list of options supported by the Redis result backend, see
-:ref:`conf-redis-result-backend`
+Redis 结果后端支持的选项列表见 :ref:`conf-redis-result-backend` 。
 
 .. _redis-caveats:
 
-Caveats
+警示
 =======
 
-.. _redis-caveat-fanout-prefix:
+- 广播信息默认队所有虚拟主机可见。
 
-- Broadcast messages will be seen by all virtual hosts by default.
-
-    You have to set a transport option to prefix the messages so that
-    they will only be received by the active virtual host::
+    你需要设置一个传输选项来给消息加上前缀，这样消息只会被活动的
+    虚拟主机收到::
 
         BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True}
 
-    Note that you will not be able to communicate with workers running older
-    versions or workers that does not have this setting enabled.
+    注意，你将不能与运行老版本的职程或没有启用这个选项的职程通信。
 
-    This setting will be the default in the future, so better to migrate
-    sooner rather than later.
+    这个选项在以后将会使默认的，迁移宜早不宜迟。
 
-.. _redis-caveat-fanout-patterns:
+- 如果任务没有在 :ref:`redis-visibility_timeout` 内确认接收，任务
+  会被重新委派给另一个职程并执行。
 
-- Workers will receive all task related events by default.
+    这会在预计到达时间/倒计时/重试这些执行时间超出可见性超时时间
+    的任务上导致问题；事实上如果超时，任务将循环重新执行。
 
-    To avoid this you must set the ``fanout_patterns`` fanout option so that
-    the workers may only subscribe to worker related events::
+    所以你需要增大可见性超时时间，以符合你计划使用的最长预计到达
+    时间。
 
-        BROKER_TRANSPORT_OPTIONS = {'fanout_patterns': True}
+    注意 Celery 会在职程关闭的时候重新分派消息，所以较长的可见性
+    超时时间只会造成在断电或强制终止职程之后“丢失”任务重新委派的
+    延迟。
 
-    Note that this change is backward incompatible so all workers in the
-    cluster must have this option enabled, or else they will not be able to
-    communicate.
+    周期任务不会受可见性超时影响，因为这是一个与预计到达时间/倒
+    计时不同的概念。
 
-    This option will be enabled by default in the future.
-
-- If a task is not acknowledged within the :ref:`redis-visibility_timeout`
-  the task will be redelivered to another worker and executed.
-
-    This causes problems with ETA/countdown/retry tasks where the
-    time to execute exceeds the visibility timeout; in fact if that
-    happens it will be executed again, and again in a loop.
-
-    So you have to increase the visibility timeout to match
-    the time of the longest ETA you are planning to use.
-
-    Note that Celery will redeliver messages at worker shutdown,
-    so having a long visibility timeout will only delay the redelivery
-    of 'lost' tasks in the event of a power failure or forcefully terminated
-    workers.
-
-    Periodic tasks will not be affected by the visibility timeout,
-    as this is a concept separate from ETA/countdown.
-
-    You can increase this timeout by configuring a transport option
-    with the same name::
+    你可以配置同名的传输选项来增大这个时间::
 
         BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 43200}
 
-    The value must be an int describing the number of seconds.
+    这个值必须是整数，单位是秒。
 
+- 监视事件（用于 flower 或其他工具）是全局的，并且不会受虚拟主机
+  设置的影响。
 
-- Monitoring events (as used by flower and other tools) are global
-  and is not affected by the virtual host setting.
+    这是 Redis 带来的限制。Redis PUB/SUB 信道是全局的，并且不受
+    数据库序号影响。
 
-    This is caused by a limitation in Redis.  The Redis PUB/SUB channels
-    are global and not affected by the database number.
+- Redis 在某些情况会从数据库中驱除键。
 
-- Redis may evict keys from the database in some situations
-
-    If you experience an error like::
+    如果你遇到了类似这样的错误::
 
         InconsistencyError, Probably the key ('_kombu.binding.celery') has been
         removed from the Redis database.
 
-    you may want to configure the redis-server to not evict keys by setting
-    the ``timeout`` parameter to 0.
+    你可以配置 Redis 服务器的 ``timeout`` 参数为 0 来避免键被驱
+    逐。

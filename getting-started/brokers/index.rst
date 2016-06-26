@@ -1,17 +1,17 @@
 .. _brokers:
 
 =====================
- Brokers
+中间人
 =====================
 
 :Release: |version|
 :Date: |today|
 
-Celery supports several message transport alternatives.
+Celery 支持几个可选的消息传输方式。
 
 .. _broker_toc:
 
-Broker Instructions
+中间人指南
 ===================
 
 .. toctree::
@@ -20,7 +20,7 @@ Broker Instructions
     rabbitmq
     redis
 
-Experimental Transports
+实验性的传输方式
 =======================
 
 .. toctree::
@@ -36,44 +36,40 @@ Experimental Transports
 
 .. _broker-overview:
 
-Broker Overview
+中间人概览
 ===============
 
-This is comparison table of the different transports supports,
-more information can be found in the documentation for each
-individual transport (see :ref:`broker_toc`).
+该表为不同传输方式支持情况的比较表，更多信息可以在专门介绍
+相应传输方式的文档中找到（见 :ref:`broker_toc` ）。
 
 +---------------+--------------+----------------+--------------------+
-| **Name**      | **Status**   | **Monitoring** | **Remote Control** |
+| **名称**      | **状态**     | **监视**       | **远程控制**       |
 +---------------+--------------+----------------+--------------------+
-| *RabbitMQ*    | Stable       | Yes            | Yes                |
+| *RabbitMQ*    | 稳定         | 是             | 是                 |
 +---------------+--------------+----------------+--------------------+
-| *Redis*       | Stable       | Yes            | Yes                |
+| *Redis*       | 稳定         | 是             | 是                 |
 +---------------+--------------+----------------+--------------------+
-| *Mongo DB*    | Experimental | Yes            | Yes                |
+| *Mongo DB*    | 实验性       | 是             | 是                 |
 +---------------+--------------+----------------+--------------------+
-| *Beanstalk*   | Experimental | No             | No                 |
+| *Beanstalk*   | 实验性       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
-| *Amazon SQS*  | Experimental | No             | No                 |
+| *Amazon SQS*  | 实验性       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
-| *Couch DB*    | Experimental | No             | No                 |
+| *Couch DB*    | 实验性       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
-| *Zookeeper*   | Experimental | No             | No                 |
+| *Zookeeper*   | 实验性       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
-| *Django DB*   | Experimental | No             | No                 |
+| *Django DB*   | 实验性       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
-| *SQLAlchemy*  | Experimental | No             | No                 |
+| *SQLAlchemy*  | 实验性       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
-| *Iron MQ*     | 3rd party    | No             | No                 |
+| *Iron MQ*     | 第三方       | 否             | 否                 |
 +---------------+--------------+----------------+--------------------+
 
-Experimental brokers may be functional but they do not have
-dedicated maintainers.
+实验性中间人可能很实用，但没有专门的维护者。
 
-Missing monitor support means that the transport does not
-implement events, and as such Flower, `celery events`, `celerymon`
-and other event-based monitoring tools will not work.
+缺失监视的支持意味着这个传输方式不能实现事件，并且诸如 Flower、
+`celery events` 、 `celerymon` 和其他基于事件的监视工具将不能使用。
 
-Remote control means the ability to inspect and manage workers
-at runtime using the `celery inspect` and `celery control` commands
-(and other tools using the remote control API).
+远程控制意味着在运行时用 `celery inspect` 和 `celery control` 命令
+检视和管理职程的能力（或者其他实用远程控制 API 的工具）。
