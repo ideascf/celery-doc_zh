@@ -15,26 +15,23 @@ Starting the worker
 
 .. sidebar:: Daemonizing
 
-    You probably want to use a daemonization tool to start
-    in the background.  See :ref:`daemonizing` for help
-    detaching the worker using popular daemonization tools.
+    你可能想使用一些后台化工具在后台启动`worker`。
+    参见:ref:`daemonizing`,使用常用的后台化工具帮助detach `worker`。
 
-You can start the worker in the foreground by executing the command:
+你可以执行这个命令，在前台启动`worker`:
 
 .. code-block:: bash
 
     $ celery -A proj worker -l info
 
-For a full list of available command-line options see
-:mod:`~celery.bin.worker`, or simply do:
+要想查看`worker`的所有可用的命令行参数，请参照 :mod:`~celery.bin.worker`，或:
 
 .. code-block:: bash
 
     $ celery worker --help
 
-You can also start multiple workers on the same machine. If you do so
-be sure to give a unique name to each individual worker by specifying a
-host name with the :option:`--hostname|-n` argument:
+你也可以在同一台机器上启动多个`worker`实例。如果你要这么做，请确保为每一个独立的`worker`
+分配一个唯一的名称（通过 :option:`--hostname|-n` 参数选项指定host name）
 
 .. code-block:: bash
 
@@ -42,14 +39,13 @@ host name with the :option:`--hostname|-n` argument:
     $ celery -A proj worker --loglevel=INFO --concurrency=10 -n worker2.%h
     $ celery -A proj worker --loglevel=INFO --concurrency=10 -n worker3.%h
 
-The hostname argument can expand the following variables:
+hostname参数可以使用以下变量扩展:
 
-    - ``%h``:  Hostname including domain name.
-    - ``%n``:  Hostname only.
-    - ``%d``:  Domain name only.
+    - ``%h``:  包含domain的Hostname
+    - ``%n``:  仅Hostname.
+    - ``%d``:  仅Hostname.
 
-E.g. if the current hostname is ``george.example.com`` then
-these will expand to:
+例如，如果当前的Hostname是``george.example.com``，那么将被扩展为:
 
     - ``worker1.%h`` -> ``worker1.george.example.com``
     - ``worker1.%n`` -> ``worker1.george``
@@ -64,22 +60,17 @@ these will expand to:
 Stopping the worker
 ===================
 
-Shutdown should be accomplished using the :sig:`TERM` signal.
+应该使用:sig:`TERM`信号来关闭`worker`。
 
-When shutdown is initiated the worker will finish all currently executing
-tasks before it actually terminates, so if these tasks are important you should
-wait for it to finish before doing anything drastic (like sending the :sig:`KILL`
-signal).
+当关闭操作开始后，`worker`将在真正关闭之前，继续完成当前执行中的`tasks`；
+所以如果这些`tasks`是非常重要的，你应该在执行一些毁灭性操作(比如发送:sig:`KILL`信号)之前等待它们执行完成。
 
-If the worker won't shutdown after considerate time, for example because
-of tasks stuck in an infinite-loop, you can use the :sig:`KILL` signal to
-force terminate the worker, but be aware that currently executing tasks will
-be lost (unless the tasks have the :attr:`~@Task.acks_late`
-option set).
+如果在预计的时间之后，`worker`仍然没有关闭（例如：因为`task`由于陷入无限循环而被卡主），
+你可以使用:sig:`KILL`信号来强制性结束这个`worker`；但是*注意*当前执行中的`task`将会被丢失
+（除非这个 `task` 使用了 :attr:`~@Task.acks_late`选项）。
 
-Also as processes can't override the :sig:`KILL` signal, the worker will
-not be able to reap its children, so make sure to do so manually.  This
-command usually does the trick:
+由于进程不能捕获处理:sig:`KILL`信号，`worker`将不能收割（reap）它的子进程，所以请确保手动完成。
+你可以使用如下命令(trick)完成:
 
 .. code-block:: bash
 
@@ -90,22 +81,19 @@ command usually does the trick:
 Restarting the worker
 =====================
 
-To restart the worker you should send the `TERM` signal and start a new
-instance.  The easiest way to manage workers for development
-is by using `celery multi`:
+你可以先发送`TERM`信号去停止`worker`，然后在手动的启动一个新的`worker`实例。
+开发过程中最便利的`worker`管理方式是：使用`celery multi`:
 
     .. code-block:: bash
 
         $ celery multi start 1 -A proj -l info -c4 --pidfile=/var/run/celery/%n.pid
         $ celery multi restart 1 --pidfile=/var/run/celery/%n.pid
 
-For production deployments you should be using init scripts or other process
-supervision systems (see :ref:`daemonizing`).
+对于生产环境部署时，你应该使用一个init脚本或者其它管理系统（参见 :ref:`daemonizing`）。
 
-Other than stopping then starting the worker to restart, you can also
-restart the worker using the :sig:`HUP` signal, but note that the worker
-will be responsible for restarting itself so this is prone to problems and
-is not recommended in production:
+相比停止然后再重启一个`worker`，你也可以使用:sig:`HUP`信号来重启`worker`，
+*但是请注意*： 这样`worker`在重启过程中仍然处于可响应状态，因此可能会导致一些问题，
+并且不推荐你在生产环境中使用：
 
 .. code-block:: bash
 
@@ -113,12 +101,10 @@ is not recommended in production:
 
 .. note::
 
-    Restarting by :sig:`HUP` only works if the worker is running
-    in the background as a daemon (it does not have a controlling
-    terminal).
+    使用:sig:`HUP`信号重启`worker`，仅当职程以守护进程方式运行与后台时可用
+    （它没有控制终端）
 
-    :sig:`HUP` is disabled on OS X because of a limitation on
-    that platform.
+    由于平台的一些限制，:sig:`HUP` 在OS X平台是被禁用了的。
 
 
 .. _worker-process-signals:
@@ -126,7 +112,7 @@ is not recommended in production:
 Process Signals
 ===============
 
-The worker's main process overrides the following signals:
+`worker`主进程处理了一下信号:
 
 +--------------+-------------------------------------------------+
 | :sig:`TERM`  | Warm shutdown, wait for tasks to complete.      |
@@ -143,20 +129,19 @@ The worker's main process overrides the following signals:
 Variables in file paths
 =======================
 
-The file path arguments for :option:`--logfile`, :option:`--pidfile` and :option:`--statedb`
-can contain variables that the worker will expand:
+ :option:`--logfile`, :option:`--pidfile` 以及 :option:`--statedb`，
+ 这些命令行文件路径参数 可以包含一些可扩展变量:
 
 Node name replacements
 ----------------------
 
-- ``%h``:  Hostname including domain name.
-- ``%n``:  Hostname only.
-- ``%d``:  Domain name only.
-- ``%i``:  Prefork pool process index or 0 if MainProcess.
-- ``%I``:  Prefork pool process index with separator.
+- ``%h``:  包含Domain的Hostname.
+- ``%n``:  仅Hostname.
+- ``%d``:  仅Domain.
+- ``%i``:  Prefork pool process index 或 0（主进程）.
+- ``%I``:  包含分隔符的Prefork pool process index.
 
-E.g. if the current hostname is ``george.example.com`` then
-these will expand to:
+比如，如果当前的hostname时``george.example.com``，那么将有如下展开:
 
 - ``--logfile=%h.log`` -> :file:`george.example.com.log`
 - ``--logfile=%n.log`` -> :file:`george.log`
@@ -170,7 +155,7 @@ Prefork pool process index
 The prefork pool process index specifiers will expand into a different
 filename depending on the process that will eventually need to open the file.
 
-This can be used to specify one log file per child process.
+这可以用来为每个子进程指定一个日志文件。
 
 Note that the numbers will stay within the process limit even if processes
 exit or if autoscale/maxtasksperchild/time limits are used.  I.e. the number
@@ -199,20 +184,15 @@ is the *process index* not the process count or pid.
 Concurrency
 ===========
 
-By default multiprocessing is used to perform concurrent execution of tasks,
-but you can also use :ref:`Eventlet <concurrency-eventlet>`.  The number
-of worker processes/threads can be changed using the :option:`--concurrency`
-argument and defaults to the number of CPUs available on the machine.
+默认使用多进程来并发执行`task`，但是你也可以使用 :ref:`Eventlet <concurrency-eventlet>`。
+`worker`的进程数/线程数，可以使用 :option:`--concurrency` 来指定，默认是当前主机可用CPU个数。
 
 .. admonition:: Number of processes (multiprocessing/prefork pool)
 
-    More pool processes are usually better, but there's a cut-off point where
-    adding more pool processes affects performance in negative ways.
-    There is even some evidence to support that having multiple worker
-    instances running, may perform better than having a single worker.
-    For example 3 workers with 10 pool processes each.  You need to experiment
-    to find the numbers that works best for you, as this varies based on
-    application, work load, task run times and other factors.
+    通常情况，进程池中进程数越多越好，但是存在一个零界点 —— 继续增加进程数将会对性能带来消极影响。
+    事实上有些证据表明，运行多个`worker`实例会比运行一个职程更好。
+    例如，运行3个`worker`，每个 `worker` 拥有包含10个进程的进程池。
+    可以自行实验去找到最合适你自己的数值，因为这些数值取决于应用、工作负载、task运行次数、以及其它因数。
 
 .. _worker-remote-control:
 
@@ -223,56 +203,45 @@ Remote control
 
 .. sidebar:: The ``celery`` command
 
-    The :program:`celery` program is used to execute remote control
-    commands from the command-line.  It supports all of the commands
-    listed below.  See :ref:`monitoring-control` for more information.
+    :program:`celery` 被用于在命令行执行远程控制命令。 它支持以下列出的所有命令。
+    参见 :ref:`monitoring-control` 了解更多详情。
 
-pool support: *prefork, eventlet, gevent*, blocking:*threads/solo* (see note)
+pool support: *prefork, eventlet, gevent*,
+blocking:*threads/solo* (see note)，
 broker support: *amqp, redis*
 
-Workers have the ability to be remote controlled using a high-priority
-broadcast message queue.  The commands can be directed to all, or a specific
-list of workers.
+`worker`拥有使用高优先级的广播消息队列来远程控制的能力。
+命令被发送给所有`worker` 或者 指定的`worker`列表。
 
-Commands can also have replies.  The client can then wait for and collect
-those replies.  Since there's no central authority to know how many
-workers are available in the cluster, there is also no way to estimate
-how many workers may send a reply, so the client has a configurable
-timeout — the deadline in seconds for replies to arrive in.  This timeout
-defaults to one second.  If the worker doesn't reply within the deadline
-it doesn't necessarily mean the worker didn't reply, or worse is dead, but
-may simply be caused by network latency or the worker being slow at processing
-commands, so adjust the timeout accordingly.
+命令也可以有答复。客户端可以等待并收集这些答复。
+由于没有集权中心去获得集群中的`worker`总数，也没有方法估计有多少`worker`可能会发送回复，
+所以客户端有一个可配置的等待超时时间 —— 等待回复到达的deadline。默认超时时间是1秒钟。
+如果一个`worker`没有在deadline之前回复，这并不意味着这个`worker`没有回复或者挂掉了，
+而可能仅仅是因为网络延时或这个职程正在处理耗时的命令； 所以请适当地调整这个超时时间。
 
-In addition to timeouts, the client can specify the maximum number
-of replies to wait for.  If a destination is specified, this limit is set
-to the number of destination hosts.
+除了这个超时时间以外，客户端还可以指定一个等待的最大回复数。如果指定了操作目标，
+那么这个限制会被设置为操作目标的数量。
 
 .. note::
 
-    The solo and threads pool supports remote control commands,
-    but any task executing will block any waiting control command,
-    so it is of limited use if the worker is very busy.  In that
-    case you must increase the timeout waiting for replies in the client.
+    虽然solo和threads pool也支持远程控制命令，但是任一task的执行将会阻塞掉其它等待中的控制命令。
+    所以，在这种情况，你应该适当延长客户端等待回复的超时时间。
 
 .. _worker-broadcast-fun:
 
 The :meth:`~@control.broadcast` function.
 ----------------------------------------------------
 
-This is the client function used to send commands to the workers.
-Some remote control commands also have higher-level interfaces using
-:meth:`~@control.broadcast` in the background, like
-:meth:`~@control.rate_limit` and :meth:`~@control.ping`.
+这是一个客户端函数，用来发送命令到`worker`。一些拥有高级接口远程控制命令，
+底层也是使用:meth:`~@control.broadcast`，比如： :meth:`~@control.rate_limit` and :meth:`~@control.ping`.
 
-Sending the :control:`rate_limit` command and keyword arguments::
+发送 :control:`rate_limit` 命令以及的关键字参数::
 
     >>> app.control.broadcast('rate_limit',
     ...                          arguments={'task_name': 'myapp.mytask',
     ...                                     'rate_limit': '200/m'})
 
-This will send the command asynchronously, without waiting for a reply.
-To request a reply you have to use the `reply` argument::
+这将异步地发送这个命令，不会等待回复。如需要回复，你必须设置`reply`参数::
 
     >>> app.control.broadcast('rate_limit', {
     ...     'task_name': 'myapp.mytask', 'rate_limit': '200/m'}, reply=True)
@@ -280,8 +249,7 @@ To request a reply you have to use the `reply` argument::
      {'worker2.example.com': 'New rate limit set successfully'},
      {'worker3.example.com': 'New rate limit set successfully'}]
 
-Using the `destination` argument you can specify a list of workers
-to receive the command::
+使用`destination`参数,你可以指定一个接受这个命令的`worker`列表::
 
     >>> app.control.broadcast('rate_limit', {
     ...     'task_name': 'myapp.mytask',
@@ -290,9 +258,7 @@ to receive the command::
     [{'worker1.example.com': 'New rate limit set successfully'}]
 
 
-Of course, using the higher-level interface to set rate limits is much
-more convenient, but there are commands that can only be requested
-using :meth:`~@control.broadcast`.
+当然，使用高级接口去设置速率限制是更方便的，但是有一些命令只能通过:meth:`~@control.broadcast`来完成。
 
 Commands
 ========
@@ -305,28 +271,24 @@ Commands
 :broker support: *amqp, redis*
 :command: :program:`celery -A proj control revoke <task_id>`
 
-All worker nodes keeps a memory of revoked task ids, either in-memory or
-persistent on disk (see :ref:`worker-persistent-revokes`).
+所有`worker`节点都会在内存中或持续化在磁盘上，保持被撤销的`task`的ID。
+(参见 see :ref:`worker-persistent-revokes`)
 
-When a worker receives a revoke request it will skip executing
-the task, but it won't terminate an already executing task unless
-the `terminate` option is set.
+当一个`worker`收到一个撤销请求时，它将跳过执行这个`task`，
+但是不会终止一个已经正在执行的`task`，除非你设置了`terminate`选项。
 
 .. note::
 
-    The terminate option is a last resort for administrators when
-    a task is stuck.  It's not for terminating the task,
-    it's for terminating the process that is executing the task, and that
-    process may have already started processing another task at the point
-    when the signal is sent, so for this reason you must never call this
-    programatically.
+    terminate选项是当一个`task`被卡主时，管理员的最后手段。
+    它不是用来中断这个`task`的，而是用来中断正在执行这个`task`的*进程*，
+    并且这个进程在此同时，可能已经正在处理另一个`task`。所以，因为这些原因，
+    永远不要在程序中这样调用。
 
-If `terminate` is set the worker child process processing the task
-will be terminated.  The default signal sent is `TERM`, but you can
-specify this using the `signal` argument.  Signal can be the uppercase name
-of any signal defined in the :mod:`signal` module in the Python Standard
-Library.
+如果`terminate`选项被设置，处理这个`task`的`worker`子进程将被中断。
+默认的中断信号是`TERM`，但是你可以通过`signal`参数来指定。
+信号可以是任何在python标准库的:mod:`signal`模块中定义的信号的*大写*名称。
 
+中断一个task，也会撤销它。
 Terminating a task also revokes it.
 
 **Example**
@@ -354,8 +316,7 @@ Revoking multiple tasks
 .. versionadded:: 3.1
 
 
-The revoke method also accepts a list argument, where it will revoke
-several tasks at once.
+revoke方法同时也接受一个list参数，将同时撤销多个`task`。
 
 **Example**
 
@@ -368,30 +329,26 @@ several tasks at once.
     ])
 
 
-The ``GroupResult.revoke`` method takes advantage of this since
-version 3.1.
+从3.1版本开始引入的``GroupResult.revoke``方法就利用的这个特性.
 
 .. _worker-persistent-revokes:
 
 Persistent revokes
 ------------------
 
-Revoking tasks works by sending a broadcast message to all the workers,
-the workers then keep a list of revoked tasks in memory.  When a worker starts
-up it will synchronize revoked tasks with other workers in the cluster.
+撤销task，通过发送一个广播消息给所有的`worker`，这些`worker`将在内存中保持被一份撤销的`task`列表。
+当一个`worker`启动时，它会和其他集群中的其它`worker`同步这些被撤销的`task`。
 
-The list of revoked tasks is in-memory so if all workers restart the list
-of revoked ids will also vanish.  If you want to preserve this list between
-restarts you need to specify a file for these to be stored in by using the `--statedb`
-argument to :program:`celery worker`:
+由于被撤销的`task`列表存放于内存中，一旦所有`worker`发生重启，这个列表将会丢失。
+如果你想在重启后仍然存有这个列表，你必须为 :program:`celery worker` 使用`-statedb`参数指定一个文件
+—— 用来存储这些信息的文件:
 
 .. code-block:: bash
 
     celery -A proj worker -l info --statedb=/var/run/celery/worker.state
 
-or if you use :program:`celery multi` you will want to create one file per
-worker instance so then you can use the `%n` format to expand the current node
-name:
+或者，如果你使用 :program:`celery multi`，你想为每个`worker`实例创建一个单独的文件，
+那么你可以使用`%n`变量，来扩展为当前节点的名称:
 
 .. code-block:: bash
 
@@ -400,9 +357,8 @@ name:
 
 See also :ref:`worker-files`
 
-Note that remote control commands must be working for revokes to work.
-Remote control commands are only supported by the RabbitMQ (amqp) and Redis
-at this point.
+注意： 要想revoke可以工作，必须确保远程控制命令可以工作。
+目前，远程控制明了仅仅被  RabbitMQ (amqp) 和 Redis 支持。
 
 .. _worker-time-limits:
 
@@ -415,19 +371,22 @@ pool support: *prefork/gevent*
 
 .. sidebar:: Soft, or hard?
 
+    时间限制相关的设置有两个值： `soft` 和 `hard`。
+    `soft`时间限制，允许这个task(译者注：执行超时的task)，在它被杀掉之前，捕获一个异常来做清理工作。
+    `hard`时间限制超时，是不可捕获的并且会强制中断这个task。
     The time limit is set in two values, `soft` and `hard`.
     The soft time limit allows the task to catch an exception
     to clean up before it is killed: the hard timeout is not catchable
     and force terminates the task.
 
-A single task can potentially run forever, if you have lots of tasks
-waiting for some event that will never happen you will block the worker
-from processing new tasks indefinitely.  The best way to defend against
-this scenario happening is enabling time limits.
+一个task(A single task)可能会一直运行下去，如果有大量的`task`等待一些永远不会发生的事件，
+将导致无限期地阻塞这个`worker`处理新的`task`。防止这种情况发生的最好方法是：启用*时间限制*。
 
-The time limit (`--time-limit`) is the maximum number of seconds a task
-may run before the process executing it is terminated and replaced by a
-new process.  You can also enable a soft time limit (`--soft-time-limit`),
+时间限制（`--time-limit`）是`task`最大的的执行时间（秒为单位），达到最大时间后，
+执行这个`task`的进程将中断自己并创建一个新的进程。
+你也可以启用软时间限制（`--soft-time-limit`），这让你在进程中断自己之前，
+可以捕获这个异常并处理一些清理工作。
+You can also enable a soft time limit (`--soft-time-limit`),
 this raises an exception the task can catch to clean up before the hard
 time limit kills it:
 
@@ -443,13 +402,12 @@ time limit kills it:
         except SoftTimeLimitExceeded:
             clean_up_in_a_hurry()
 
-Time limits can also be set using the :setting:`CELERYD_TASK_TIME_LIMIT` /
-:setting:`CELERYD_TASK_SOFT_TIME_LIMIT` settings.
+时间限制同样可以使用配置项 :setting:`CELERYD_TASK_TIME_LIMIT` 或 :setting:`CELERYD_TASK_SOFT_TIME_LIMIT`
+ 来设置。
 
 .. note::
 
-    Time limits do not currently work on Windows and other
-    platforms that do not support the ``SIGUSR1`` signal.
+    在windows平台和其它不支持``SIGUSR1``信号的平台下，时间限制特性当前不被支持。
 
 
 Changing time limits at runtime
@@ -458,18 +416,16 @@ Changing time limits at runtime
 
 broker support: *amqp, redis*
 
-There is a remote control command that enables you to change both soft
-and hard time limits for a task — named ``time_limit``.
 
-Example changing the time limit for the ``tasks.crawl_the_web`` task
-to have a soft time limit of one minute, and a hard time limit of
-two minutes::
+有一个可以可以让你改变指定`task`的`soft`和`hard`时间限制的命令 —— 名为``time_limit``。
+
+比如，改变``tasks.crawl_the_web`` task的`soft`时间限制为1分钟、`hard`时间限制为2分钟::
 
     >>> app.control.time_limit('tasks.crawl_the_web',
                                soft=60, hard=120, reply=True)
     [{'worker1.example.com': {'ok': 'time limits set successfully'}}]
 
-Only tasks that starts executing after the time limit change will be affected.
+仅对时间限制设置*更改后*启动的`task`有效。
 
 .. _worker-rate-limits:
 
@@ -481,6 +437,7 @@ Rate Limits
 Changing rate-limits at runtime
 -------------------------------
 
+比如，改变`myapp.mytask`的速率限制为: 每分钟最多执行200个:
 Example changing the rate limit for the `myapp.mytask` task to execute
 at most 200 tasks of that type every minute:
 
@@ -488,9 +445,8 @@ at most 200 tasks of that type every minute:
 
     >>> app.control.rate_limit('myapp.mytask', '200/m')
 
-The above does not specify a destination, so the change request will affect
-all worker instances in the cluster.  If you only want to affect a specific
-list of workers you can include the ``destination`` argument:
+上面的操作中没有指定目标(worker)，所以这个集群中的所有`worker`实例都将会受到影响。
+如果你仅仅想针对一些`worker`生效，你可以在``destination``参数中指定这些目标:
 
 .. code-block:: python
 
@@ -499,8 +455,7 @@ list of workers you can include the ``destination`` argument:
 
 .. warning::
 
-    This won't affect workers with the
-    :setting:`CELERY_DISABLE_RATE_LIMITS` setting enabled.
+    这对开启了 :setting:`CELERY_DISABLE_RATE_LIMITS` 选项的`worker`无效。
 
 .. _worker-maxtasksperchild:
 
@@ -529,14 +484,13 @@ Autoscaling
 
 pool support: *prefork*, *gevent*
 
-The *autoscaler* component is used to dynamically resize the pool
-based on load:
+*autoscaler*组件被用来基于负载动态的调整pool的容量:
 
-- The autoscaler adds more pool processes when there is work to do,
-    - and starts removing processes when the workload is low.
+- 当负载较高时，`autoscaler`自动增加更多的process来处理工作
+- 当负载降低时自动移除多余的processs.
 
-It's enabled by the :option:`--autoscale` option, which needs two
-numbers: the maximum and minimum number of pool processes::
+通过 :option:`--autoscale` 选项来启用，这个选项需要带入两个数字：
+最大 和 最小的pool processes数量::
 
         --autoscale=AUTOSCALE
              Enable autoscaling by providing
@@ -544,47 +498,41 @@ numbers: the maximum and minimum number of pool processes::
                --autoscale=10,3 (always keep 3 processes, but grow to
               10 if necessary).
 
-You can also define your own rules for the autoscaler by subclassing
-:class:`~celery.worker.autoscaler.Autoscaler`.
-Some ideas for metrics include load average or the amount of memory available.
-You can specify a custom autoscaler with the :setting:`CELERYD_AUTOSCALER` setting.
+你可以通过继承 :class:`~celery.worker.autoscaler.Autoscaler`，来定义你自己的缩放规则。
+一些常用的度量标准包括：平均负载、可用内存。
+可以使用配置项 :setting:`CELERYD_AUTOSCALER` 来指定你自定义的`autoscaler`。
 
 .. _worker-queues:
 
 Queues
 ======
 
-A worker instance can consume from any number of queues.
-By default it will consume from all queues defined in the
-:setting:`CELERY_QUEUES` setting (which if not specified defaults to the
-queue named ``celery``).
+一个`worker`实例可以从多个`queue`中消耗`task`。 默认情况下，
+它将从所有定义在配置项 :setting:`CELERY_QUEUES` 的`queue`中消耗`task`
+（如果没有指定，默认的`queue`名称为``celery``）。
 
-You can specify what queues to consume from at startup,
-by giving a comma separated list of queues to the :option:`-Q` option:
+你可以在启动的时候指定这个`worker`要从哪些`queue`中消费`task`，
+在 :option:`-Q` 选项中，使用 `,` 来指定一个 `queue`列表:
 
 .. code-block:: bash
 
     $ celery -A proj worker -l info -Q foo,bar,baz
 
-If the queue name is defined in :setting:`CELERY_QUEUES` it will use that
-configuration, but if it's not defined in the list of queues Celery will
-automatically generate a new queue for you (depending on the
-:setting:`CELERY_CREATE_MISSING_QUEUES` option).
+如果这个`queue` 在配置项 :setting:`CELERY_QUEUES` 中被定义，就使用这个队列配置(译者注： 配置项中该队列的配置)。
+否则，celery将自动为你生成一个新的队列（这取决于配置项 :setting:`CELERY_CREATE_MISSING_QUEUES`）
 
-You can also tell the worker to start and stop consuming from a queue at
-runtime using the remote control commands :control:`add_consumer` and
-:control:`cancel_consumer`.
+你可以通过远程控制命令 :control:`add_consumer` 和 :control:`cancel_consumer`，
+在运行时告知`worker` 开始或停止从一个队列中消耗task。
 
 .. control:: add_consumer
 
 Queues: Adding consumers
 ------------------------
 
-The :control:`add_consumer` control command will tell one or more workers
-to start consuming from a queue. This operation is idempotent.
+控制命令 :control:`add_consumer` 将通知一个或多个`worker`，开始从一个`queue`中消耗`task`。
+*这个操作是幂等的。*
 
-To tell all workers in the cluster to start consuming from a queue
-named "``foo``" you can use the :program:`celery control` program:
+你可以使用 :program:`celery control` 程序，通知集群中的所有`worker`开始从名为``foo``的`queue`中消耗`task`:
 
 .. code-block:: bash
 
@@ -592,14 +540,13 @@ named "``foo``" you can use the :program:`celery control` program:
     -> worker1.local: OK
         started consuming from u'foo'
 
-If you want to specify a specific worker you can use the
-:option:`--destination`` argument:
+如果你想指定要操作的特定`worker`，你可以使用 :option:`--destination` 参数:
 
 .. code-block:: bash
 
     $ celery -A proj control add_consumer foo -d worker1.local
 
-The same can be accomplished dynamically using the :meth:`@control.add_consumer` method::
+同样地，你可以使用:meth:`app.control.add_consumer()`方法动态的修改::
 
     >>> app.control.add_consumer('foo', reply=True)
     [{u'worker1.local': {u'ok': u"already consuming from u'foo'"}}]
@@ -609,9 +556,7 @@ The same can be accomplished dynamically using the :meth:`@control.add_consumer`
     [{u'worker1.local': {u'ok': u"already consuming from u'foo'"}}]
 
 
-By now I have only shown examples using automatic queues,
-If you need more control you can also specify the exchange, routing_key and
-even other options::
+至今为止，我只展示了动态的调整`queue`，如果你想控制更多，你可以指定`exchange`，`routing_key`和其他选项::
 
     >>> app.control.add_consumer(
     ...     queue='baz',
@@ -631,26 +576,21 @@ even other options::
 Queues: Cancelling consumers
 ----------------------------
 
-You can cancel a consumer by queue name using the :control:`cancel_consumer`
-control command.
+你可以使用 :control:`cancel_consumer` 控制命令取消`worker`对一个`queue`的消费。
 
-To force all workers in the cluster to cancel consuming from a queue
-you can use the :program:`celery control` program:
+强制让集群中的所有`worker`取消从指定`queue`中消费，你可以使用 :program:`celery control` 程序
 
 .. code-block:: bash
 
     $ celery -A proj control cancel_consumer foo
 
-The :option:`--destination` argument can be used to specify a worker, or a
-list of workers, to act on the command:
+你可以使用  :option:`--destination` 参数，来指定一个特定的`worker`或一个`worker`的列表:
 
 .. code-block:: bash
 
     $ celery -A proj control cancel_consumer foo -d worker1.local
 
-
-You can also cancel consumers programmatically using the
-:meth:`@control.cancel_consumer` method:
+同样地，你可以使用 :meth:`@control.cancel_consumer` 方法来取消对一个`queue`的消费:
 
 .. code-block:: bash
 
@@ -662,17 +602,14 @@ You can also cancel consumers programmatically using the
 Queues: List of active queues
 -----------------------------
 
-You can get a list of queues that a worker consumes from by using
-the :control:`active_queues` control command:
+你可以通过使用 :control:`active_queues` 控制命令，获得`worker`当前消耗的`queue`列表:
 
 .. code-block:: bash
 
     $ celery -A proj inspect active_queues
     [...]
 
-Like all other remote control commands this also supports the
-:option:`--destination` argument used to specify which workers should
-reply to the request:
+类似于其他远程控制命令，这个命令也支持 :option:`--destination` 参数去指定要操作的`worker`:
 
 .. code-block:: bash
 
@@ -680,8 +617,7 @@ reply to the request:
     [...]
 
 
-This can also be done programmatically by using the
-:meth:`@control.inspect.active_queues` method::
+同样地，你可以在程序中使用:meth:`app.control.inspect.active_queues()`方法::
 
     >>> app.control.inspect().active_queues()
     [...]
@@ -698,33 +634,30 @@ Autoreloading
 
 pool support: *prefork, eventlet, gevent, threads, solo*
 
-Starting :program:`celery worker` with the :option:`--autoreload` option will
-enable the worker to watch for file system changes to all imported task
-modules (and also any non-task modules added to the
-:setting:`CELERY_IMPORTS` setting or the :option:`-I|--include` option).
+使用 :option:`--autoreload` 选项启动 :program:`celery worker` ，
+将使`worker`监测所有被被导入的`task`模块的文件改动
+（也包括其他非task模块，但被加入到配置项 :setting:`CELERY_IMPORTS` 中的；
+或者使用命令行参数 :option:`-I|--include` 包括的）。
 
-This is an experimental feature intended for use in development only,
-using auto-reload in production is discouraged as the behavior of reloading
-a module in Python is undefined, and may cause hard to diagnose bugs and
-crashes.  Celery uses the same approach as the auto-reloader found in e.g.
-the Django ``runserver`` command.
+这是实验性质的特性，应仅仅用于调试开发；因为在python中reloading模块行为是未定义的，
+并且可能导致难以诊断的bug和崩溃，所以在生成环境中不推荐使用`autoreload`。
+Celery使用类似于Django ``runserver``命令同样的方法来使用`autoreload`。
 
-When auto-reload is enabled the worker starts an additional thread
-that watches for changes in the file system.  New modules are imported,
-and already imported modules are reloaded whenever a change is detected,
-and if the prefork pool is used the child processes will finish the work
+当`auto-reload`特性被启用时，`worker`将启动一个而外的线程 —— 用于监测文件的改动的线程。
+只要改动被监测到，新模块将被导入，已经导入的模块将被重新导入；
+如果`prefork pool`被使用，那么子进程将完成正在执行的工作并退出；
+以至可以被全新已经重载代码的的processes替换。
+if the prefork pool is used the child processes will finish the work
 they are doing and exit, so that they can be replaced by fresh processes
 effectively reloading the code.
 
-File system notification backends are pluggable, and it comes with three
-implementations:
+文件系统通知后端是插件化的，目前有3中实现：
 
 * inotify (Linux)
 
-    Used if the :mod:`pyinotify` library is installed.
-    If you are running on Linux this is the recommended implementation,
-    to install the :mod:`pyinotify` library you have to run the following
-    command:
+    如果安装了:mod:`pyinotify`，就使用这个。
+    如果你的运行平台是Linux，那么这是推荐的实现方案。
+    使用下面的命令安装:mod:`pyinotify`库:
 
     .. code-block:: bash
 
@@ -734,11 +667,9 @@ implementations:
 
 * stat
 
-    The fallback implementation simply polls the files using ``stat`` and is very
-    expensive.
+    最差的实现方案 —— 简单的使用``stat``方法去轮询所有文件，代价是非常昂贵的。
 
-You can force an implementation by setting the :envvar:`CELERYD_FSNOTIFY`
-environment variable:
+你可以通过设置环境变量 :envvar:`CELERYD_FSNOTIFY` 来强制指定一个实现方案:
 
 .. code-block:: bash
 
@@ -753,25 +684,23 @@ Pool Restart Command
 
 .. versionadded:: 2.5
 
-Requires the :setting:`CELERYD_POOL_RESTARTS` setting to be enabled.
+需要配置项 :setting:`CELERYD_POOL_RESTARTS` 被启用。
 
-The remote control command :control:`pool_restart` sends restart requests to
-the workers child processes.  It is particularly useful for forcing
-the worker to import new modules, or for reloading already imported
-modules.  This command does not interrupt executing tasks.
+远程控制命令 :control:`pool_restart` 发送一个重启请求到`worker`所有的子进程。
+这对强制`worker` 导入新模块或重载已经导入的模块是非常有用的。
+这个命令*不会打断*执行中的task。
 
 Example
 ~~~~~~~
 
-Running the following command will result in the `foo` and `bar` modules
-being imported by the worker processes:
+运行如下命令，将引起 `foo` 和 `bar` 模块被`woker`进程导入:
 
 .. code-block:: python
 
     >>> app.control.broadcast('pool_restart',
     ...                       arguments={'modules': ['foo', 'bar']})
 
-Use the ``reload`` argument to reload modules it has already imported:
+设置``reaload``参数为True，去重载一个已经被导入的模：
 
 .. code-block:: python
 
@@ -779,24 +708,20 @@ Use the ``reload`` argument to reload modules it has already imported:
     ...                       arguments={'modules': ['foo'],
     ...                                  'reload': True})
 
-If you don't specify any modules then all known tasks modules will
-be imported/reloaded:
+如果你不指定任何模块，那么所有已知的task模块将被导入/重新导入：
 
 .. code-block:: python
 
     >>> app.control.broadcast('pool_restart', arguments={'reload': True})
 
-The ``modules`` argument is a list of modules to modify. ``reload``
-specifies whether to reload modules if they have previously been imported.
-By default ``reload`` is disabled. The `pool_restart` command uses the
-Python :func:`reload` function to reload modules, or you can provide
-your own custom reloader by passing the ``reloader`` argument.
+``modules``参数是一个要modify的模块的列表。``reload``参数决定是否重载已经被导入的模块。
+默认情况下``reload``是被禁用的。`pool_restart`命令使用python的:func:`reload()`函数去重载模块，
+或者你可以通过传入``reloader``参数，提供你自定义的reloader。
 
 .. note::
 
-    Module reloading comes with caveats that are documented in :func:`reload`.
-    Please read this documentation and make sure your modules are suitable
-    for reloading.
+    模块重载伴随一些注意事项 —— 记录在 :func:`reload` 文档中。
+    请阅读文档并确保你的模块是适合被重载的。
 
 .. seealso::
 
@@ -810,11 +735,10 @@ your own custom reloader by passing the ``reloader`` argument.
 Inspecting workers
 ==================
 
-:class:`@control.inspect` lets you inspect running workers.  It
-uses remote control commands under the hood.
+:class:`@control.inspect` 使你可以`inspect` 运行中的 `worker`。
+它使用远程控制命令的高级选项.
 
-You can also use the ``celery`` command to inspect workers,
-and it supports the same commands as the :class:`@control` interface.
+你也可以使用``celery``命令去inspect worker，并且它支持和:class:`@control`同样的命令接口。
 
 .. code-block:: python
 
@@ -833,8 +757,7 @@ and it supports the same commands as the :class:`@control` interface.
 Dump of registered tasks
 ------------------------
 
-You can get a list of tasks registered in the worker using the
-:meth:`~@control.inspect.registered`::
+你可以使用:meth:`~@control.inspect.registered` 得到在`worker`中注册的`task`的列表::
 
     >>> i.registered()
     [{'worker1.example.com': ['tasks.add',
@@ -845,8 +768,7 @@ You can get a list of tasks registered in the worker using the
 Dump of currently executing tasks
 ---------------------------------
 
-You can get a list of active tasks using
-:meth:`~@control.inspect.active`::
+你可以使用 :meth:`~@control.inspect.active` 获得当前正在active的`tasks`::
 
     >>> i.active()
     [{'worker1.example.com':
@@ -860,8 +782,7 @@ You can get a list of active tasks using
 Dump of scheduled (ETA) tasks
 -----------------------------
 
-You can get a list of tasks waiting to be scheduled by using
-:meth:`~@control.inspect.scheduled`::
+你可以使用 :meth:`~@control.inspect.scheduled` 获得当前等待被调度的`task`
 
     >>> i.scheduled()
     [{'worker1.example.com':
@@ -880,18 +801,16 @@ You can get a list of tasks waiting to be scheduled by using
 
 .. note::
 
-    These are tasks with an eta/countdown argument, not periodic tasks.
+    这些任务是拥有`eta/countdown`参数的任务，不是周期任务（periodic tasks）。
 
 .. _worker-inspect-reserved:
 
 Dump of reserved tasks
 ----------------------
 
-Reserved tasks are tasks that have been received, but are still waiting to be
-executed.
+已经保存的任务，是已经提取但是还没有被执行的任务。
 
-You can get a list of these using
-:meth:`~@control.inspect.reserved`::
+你可以通过 :meth:`~@control.inspect.reserved` 来获得这些`task`的列表::
 
     >>> i.reserved()
     [{'worker1.example.com':
@@ -906,26 +825,26 @@ You can get a list of these using
 Statistics
 ----------
 
-The remote control command ``inspect stats`` (or
-:meth:`~@control.inspect.stats`) will give you a long list of useful (or not
-so useful) statistics about the worker:
+远程控制命令 ``inspect stats`` (或 :meth:`~@control.inspect.stats`)
+将返回给你一个有用（或许没那么有用）的关于`worker`的长列表统计信息:
 
 .. code-block:: bash
 
     $ celery -A proj inspect stats
 
-The output will include the following fields:
+so useful) statistics about the worker:
 
 - ``broker``
 
-    Section for broker information.
+    `broker`相关的段落
 
     * ``connect_timeout``
 
-        Timeout in seconds (int/float) for establishing a new connection.
+        建立一个新连接的超时时间（秒为单位的int/float）。
 
     * ``heartbeat``
 
+        当前心跳值（被客户端设置）
         Current heartbeat value (set by client).
 
     * ``hostname``
@@ -1106,7 +1025,7 @@ Additional Commands
 Remote shutdown
 ---------------
 
-This command will gracefully shut down the worker remotely:
+这个命令将优雅的关闭远程的`worker`:
 
 .. code-block:: python
 
@@ -1118,10 +1037,8 @@ This command will gracefully shut down the worker remotely:
 Ping
 ----
 
-This command requests a ping from alive workers.
-The workers reply with the string 'pong', and that's just about it.
-It will use the default one second timeout for replies unless you specify
-a custom timeout:
+这个命令向所有存活的`worker`发送一个ping请求。`worker`回复一个'pong'字符串，并且仅仅是这样。
+默认将使用1秒作为超时时间，除非你指定一个超时时间:
 
 .. code-block:: python
 
@@ -1130,8 +1047,7 @@ a custom timeout:
      {'worker2.example.com': 'pong'},
      {'worker3.example.com': 'pong'}]
 
-:meth:`~@control.ping` also supports the `destination` argument,
-so you can specify which workers to ping::
+:meth:`~@control.ping` 也支持`destination`参数，所以你可以指定你要ping哪个`worker::
 
     >>> ping(['worker2.example.com', 'worker3.example.com'])
     [{'worker2.example.com': 'pong'},
@@ -1145,9 +1061,8 @@ so you can specify which workers to ping::
 Enable/disable events
 ---------------------
 
-You can enable/disable events by using the `enable_events`,
-`disable_events` commands.  This is useful to temporarily monitor
-a worker using :program:`celery events`/:program:`celerymon`.
+你可以通过使用`enable_events`，`disable_events`命令, 来启用或禁用事件。
+这是非常有用的 —— 使用 :program:`celery events`/:program:`celerymon` 临时监测一个`worker`。
 
 .. code-block:: python
 
@@ -1159,13 +1074,11 @@ a worker using :program:`celery events`/:program:`celerymon`.
 Writing your own remote control commands
 ========================================
 
-Remote control commands are registered in the control panel and
-they take a single argument: the current
-:class:`~celery.worker.control.ControlDispatch` instance.
-From there you have access to the active
-:class:`~celery.worker.consumer.Consumer` if needed.
+远程控制命令被注册到控制面板，并且带入一个单独的参数：
+当前的:class:`~celery.worker.control.ControlDispatch`实例。
+如有必要，你可以从那里访问active的 :class:`~celery.worker.consumer.Consumer`。
 
-Here's an example control command that increments the task prefetch count:
+这是一个增加预取任务总数的远程控制命令的示例:
 
 .. code-block:: python
 
