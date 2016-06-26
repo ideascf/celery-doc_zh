@@ -9,38 +9,32 @@
 Introduction
 ============
 
-The `Eventlet`_ homepage describes it as;
-A concurrent networking library for Python that allows you to
-change how you run your code, not how you write it.
+`Evenlet`_ 的主页有详细的描述.
+Evenlet是一个改变你代码如何运行，而不是改变你如何写代码的 Python并发网络库。
 
-    * It uses `epoll(4)`_ or `libevent`_ for
-      `highly scalable non-blocking I/O`_.
-    * `Coroutines`_ ensure that the developer uses a blocking style of
-      programming that is similar to threading, but provide the benefits of
-      non-blocking I/O.
-    * The event dispatch is implicit, which means you can easily use Eventlet
-      from the Python interpreter, or as a small part of a larger application.
+    * 它使用`epool(4)`_ 或 `libevent`_ 作为高伸缩性的非阻塞网络IO(`highly scalable non-blocking I/O`_)。
+    * `Coroutines`_ 使开发者使用类似于多线程的阻塞模型编程，但是却享有非阻塞I/O的优势。
+    * 事件派发是隐式完成的，这意味着你可以轻松的在Python解释器中使用`Eventlet`，
+      亦或作为大型应用程序的一部分。
 
-Celery supports Eventlet as an alternative execution pool implementation.
-It is in some cases superior to prefork, but you need to ensure
-your tasks do not perform blocking calls, as this will halt all
-other operations in the worker until the blocking call returns.
+Celery支持`Evenlet`作为一个可选的执行池（excution pool）实现。
+它相比`Prefork`会有一些优势，但是你必须保证你的`task`不会做任何阻塞的调用，
+因为阻塞调用将halt这个worker内的所有其它操作，直到这次阻塞调用完成。
 
-The prefork pool can take use of multiple processes, but how many is
-often limited to a few processes per CPU.  With Eventlet you can efficiently
-spawn hundreds, or thousands of green threads.  In an informal test with a
-feed hub system the Eventlet pool could fetch and process hundreds of feeds
-every second, while the prefork pool spent 14 seconds processing 100
-feeds.  Note that is one of the applications evented I/O is especially good
-at (asynchronous HTTP requests).  You may want a mix of both Eventlet and
+`Prefork pool`可以利用多进程，然而多进程的数量限制在每个CPU少量的进程。
+而使用`Evenlet`你可以高效的生成成百上千的`green thread`。
+一个非正式的测试（feed hub system）表明：`Evenlet pool`每秒可以取出并处理数百个feeds，
+但是`prefork pool`需要花费14秒去处理100个feeds。注意，这仅仅是采用了事件驱动I/O
+的应用程序的优势之一（之一指：异步HTTP请求）。你可能想要结合`Evenlet`和`prefork`，
+并且根据兼容性或能工作的最好去路由`task`。
+You may want a mix of both Eventlet and
 prefork workers, and route tasks according to compatibility or
 what works best.
 
 Enabling Eventlet
 =================
 
-You can enable the Eventlet pool by using the ``-P`` option to
-:program:`celery worker`:
+你可以为:program:`celery worker` 使用``-P``选项，来启用 `Evenlet pool`:
 
 .. code-block:: bash
 
@@ -51,8 +45,7 @@ You can enable the Eventlet pool by using the ``-P`` option to
 Examples
 ========
 
-See the `Eventlet examples`_ directory in the Celery distribution for
-some examples taking use of Eventlet support.
+查看Celery发布中心的`Eventlet examples`_ 目录，了解更多使用Eventlet的样例。
 
 .. _`Eventlet`: http://eventlet.net
 .. _`epoll(4)`: http://linux.die.net/man/4/epoll
