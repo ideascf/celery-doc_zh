@@ -1,38 +1,26 @@
 .. _guide-tasks:
 
-=======
- Tasks
-=======
+=====
+Tasks
+=====
 
 Tasks are the building blocks of Celery applications.
 
-A task is a class that can be created out of any callable. It performs
-dual roles in that it defines both what happens when a task is
-called (sends a message), and what happens when a worker receives that message.
+task是一个能被任意可调用对象创建的类。他扮演了双重角色，在它被定义的时候，以及当一个task被调用(发送消息) 时和 当一个worker收到这个消息时。
 
-Every task class has a unique name, and this name is referenced in messages
-so that the worker can find the right function to execute.
+每个task类都有一个唯一的名称，这个名称被消息引用，以便于worker能够找到正确的函数去执行。
 
-A task message does not disappear
-until the message has been :term:`acknowledged` by a worker. A worker can reserve
-many messages in advance and even if the worker is killed -- caused by power failure
-or otherwise -- the message will be redelivered to another worker.
+task消息不会消失，直到这个消息被一个worker 确认(  :term:`acknowledged`  )。worker可以预先存储大量的消息，即使这个worker被杀死——因为致命的错误；否则，这个消息将被重投递给其他的worker）。
 
-Ideally task functions should be :term:`idempotent`, which means that
-the function will not cause unintented effects even if called
-multiple times with the same arguments.
-Since the worker cannot detect if your tasks are idempotent, the default
-behavior is to acknowledge the message in advance, before it's executed,
-so that a task that has already been started is never executed again..
+理想上task函数应该是幂等(  :term:`idempotent`  )(译者注：如HTTP中的GET。幂等，即多次调用间无联系，且结果可预料并唯一)，意味着使用相同的参数多次调用这个函数，不会造成预料外的结果。因为worker不能决断你的task是否是幂等的，所以默认的行为时：提前确认这个消息，在开始执行以前。 以便于一个已经开始的task不会再次被执行。
 
-If your task is idempotent you can set the :attr:`acks_late` option
-to have the worker acknowledge the message *after* the task returns
-instead.  See also the FAQ entry :ref:`faq-acks_late-vs-retry`.
+如果你能确定你的函数是幂等的，你可以设置  :attr:`acks_late`  选项，让worker在这个task*返回之后*再确认这个消息。
+See also the FAQ entry :ref:`faq-acks_late-vs-retry`.
 
 --
 
-In this chapter you will learn all about defining tasks,
-and this is the **table of contents**:
+在这个章节中，你将学习所有关于定义task相关的知识，
+下面是**目录清单**：
 
 .. contents::
     :local:
@@ -44,8 +32,7 @@ and this is the **table of contents**:
 Basics
 ======
 
-You can easily create a task from any callable by using
-the :meth:`~@task` decorator:
+你可以轻松的使用  :meth:`~@task`  装饰器，来从任何callable创建一个task：
 
 .. code-block:: python
 
@@ -55,9 +42,7 @@ the :meth:`~@task` decorator:
     def create_user(username, password):
         User.objects.create(username=username, password=password)
 
-
-There are also many :ref:`options <task-options>` that can be set for the task,
-these can be specified as arguments to the decorator:
+针对task，有很多的选项(  :ref:`options <task-options>`  )可以设置，这些设置可以作为装饰器的参数来传入：
 
 .. code-block:: python
 
@@ -67,13 +52,13 @@ these can be specified as arguments to the decorator:
 
 
 
-.. sidebar:: How do I import the task decorator? And what is "app"?
+.. sidebar:: 我应该如何导入task装饰器，以及"app"是什么？
 
-    The task decorator is available on your :class:`@Celery` application instance,
-    if you don't know what that is then please read :ref:`first-steps`.
+    task装饰器可以在你的:class:`@Celery` application实例上使用，
+    如果你不知道application实例是什么，请参阅:ref:`first-steps`.
 
-    If you're using Django or are still using the "old" module based celery API,
-    then you can import the task decorator like this::
+    如果你正在使用Django，或者仍然在使用“旧”的基于模块级别的celery API，
+    那么你可以这样导入task装饰器::
 
         from celery import task
 
@@ -81,12 +66,10 @@ these can be specified as arguments to the decorator:
         def add(x, y):
             return x + y
 
-.. sidebar:: Multiple decorators
+.. sidebar:: 多个装饰器
 
-    When using multiple decorators in combination with the task
-    decorator you must make sure that the `task`
-    decorator is applied last (which in Python oddly means that it must
-    be the first in the list):
+    当与task装饰器结合使用多个装饰器时，你必须确保`task`装饰器是最后被应用的。
+    (在python中意味着，它必须位于列表中的第一个):
 
     .. code-block:: python
 
@@ -101,10 +84,9 @@ these can be specified as arguments to the decorator:
 Names
 =====
 
-Every task must have a unique name, and a new name
-will be generated out of the function name if a custom name is not provided.
+每一个task必须拥有一个唯一的名称，如果你没有指定名称，那么一个新的名称将会根据函数名生成。
 
-For example:
+比如:
 
 .. code-block:: python
 
@@ -115,9 +97,7 @@ For example:
     >>> add.name
     'sum-of-two-numbers'
 
-A best practice is to use the module name as a namespace,
-this way names won't collide if there's already a task with that name
-defined in another module.
+最佳实践是使用模块的名字作为一个名字空间，这样就可以不和其他模块定义的同名task发生冲突。
 
 .. code-block:: python
 
@@ -125,13 +105,12 @@ defined in another module.
     >>> def add(x, y):
     ...     return x + y
 
-You can tell the name of the task by investigating its name attribute::
+你可以通过task的name属性来获取这个task的名称：
 
     >>> add.name
     'tasks.add'
 
-Which is exactly the name that would have been generated anyway,
-if the module name is "tasks.py":
+这正是生成的名称，如果模块名称是“tasks.py”：
 
 :file:`tasks.py`:
 
@@ -150,23 +129,17 @@ if the module name is "tasks.py":
 Automatic naming and relative imports
 -------------------------------------
 
-Relative imports and automatic name generation do not go well together,
-so if you're using relative imports you should set the name explicitly.
+相对导入和自动命名不是一个好的组合方式，所以，如果你正在使用相对导入，你应该明确的设置task的名称。
 
-For example if the client imports the module "myapp.tasks" as ".tasks", and
-the worker imports the module as "myapp.tasks", the generated names won't match
-and an :exc:`~@NotRegistered` error will be raised by the worker.
+例如，假设client以".tasks"的方式导入模块“myapp.tasks”，worker以"myapp.tasks"的方式导入该模块，那么生成的名字将不能匹配，最终导致worker抛出  :exc:`~@NotRegistered`  异常。
 
-This is also the case when using Django and using `project.myapp`-style
-naming in ``INSTALLED_APPS``:
+这同样也是使用Django和使用project.myapp风格命名在  ``INSTALLED_APPS``  中的问题：
 
 .. code-block:: python
 
     INSTALLED_APPS = ['project.myapp']
 
-If you install the app under the name ``project.myapp`` then the
-tasks module will be imported as ``project.myapp.tasks``,
-so you must make sure you always import the tasks using the same name:
+如果你以名称  ``project.myapp``   安装这个app，那么tasks模块应该以  ``project.myapp.tasks``  的方式被导入，所以你必须保证你始终以这种方式导入tasks:
 
 .. code-block:: python
 
@@ -174,8 +147,7 @@ so you must make sure you always import the tasks using the same name:
 
     >>> from myapp.tasks import mytask    # << BAD!!!
 
-The second example will cause the task to be named differently
-since the worker and the client imports the modules under different names:
+第二个样例将示范由于worker和client使用了不同的方式(名称)来导入模块，task被不同的命名了：
 
 .. code-block:: python
 
@@ -187,10 +159,9 @@ since the worker and the client imports the modules under different names:
     >>> mytask.name
     'myapp.tasks.mytask'
 
-So for this reason you must be consistent in how you
-import modules, which is also a Python best practice.
+所以，因为这个原因，你最好保证你导入模块方式的一致性，这也是一项Python的最佳实践。
 
-Similarly, you should not use old-style relative imports:
+同样的，你不应该使用老式的相对导入：
 
 .. code-block:: python
 
@@ -198,16 +169,13 @@ Similarly, you should not use old-style relative imports:
 
     from proj.module import foo  # GOOD!
 
-New-style relative imports are fine and can be used:
+新式的相对导入时优良并且可用的：
 
 .. code-block:: python
 
     from .module import foo  # GOOD!
 
-If you want to use Celery with a project already using these patterns
-extensively and you don't have the time to refactor the existing code
-then you can consider specifying the names explicitly instead of relying
-on the automatic naming:
+如果你想在一个已经广泛使用老式风格的项目中使用Celery，并且你没有太多的时间去重构这些已经存在的代码，那么你可以考虑为task明确的指定一个名称，而不是依赖于自动命名。
 
 .. code-block:: python
 
@@ -220,70 +188,58 @@ on the automatic naming:
 Context
 =======
 
-:attr:`~@Task.request` contains information and state related to
-the executing task.
+请求(  :attr:`~@Task.request`  )中包含信息和正在执行的任务的状态。
 
-The request defines the following attributes:
+request定义了如下属性：
 
-:id: The unique id of the executing task.
+:id:  执行任务的唯一ID.
 
 :group: The unique id a group, if this task is a member.
 
 :chord: The unique id of the chord this task belongs to (if the task
         is part of the header).
 
-:args: Positional arguments.
+:args: 位置参数.
 
-:kwargs: Keyword arguments.
+:kwargs: 关键字参数.
 
-:retries: How many times the current task has been retried.
-          An integer starting at `0`.
+:retries: 当前task已经重试的次数。
+          一个从  `0`  开始的整数.
 
-:is_eager: Set to :const:`True` if the task is executed locally in
-           the client, and not by a worker.
+:is_eager:  如果你想task在本地执行，即client，而不是在worker中执行。那么请设置为  :const:`True`
 
-:eta: The original ETA of the task (if any).
-      This is in UTC time (depending on the :setting:`CELERY_ENABLE_UTC`
-      setting).
+:eta: ask的原始预计到达时间（ETA）。使用UTC时间（依赖于  `CELERY_ENABLE_UTC`  配置选项）
 
-:expires: The original expiry time of the task (if any).
-          This is in UTC time (depending on the :setting:`CELERY_ENABLE_UTC`
-          setting).
+:expires: 原始的task的过期时间。使用UTC时间(同eta，依赖于  :setting:`CELERY_ENABLE_UTC`  )。
 
-:logfile: The file the worker logs to.  See `Logging`_.
+:logfile: worker记录日志的文件.  See `Logging`_.
 
-:loglevel: The current log level used.
+:loglevel: 当前使用的日志级别.
 
-:hostname: Hostname of the worker instance executing the task.
+:hostname: 执行task的worker的hostname.
 
-:delivery_info: Additional message delivery information. This is a mapping
-                containing the exchange and routing key used to deliver this
-                task.  Used by e.g. :meth:`~@Task.retry`
-                to resend the task to the same destination queue.
-                Availability of keys in this dict depends on the
-                message broker used.
+:delivery_info: 交付信息的附加消息。这是一个映射表，包含了用来交付这个task，使用的交换和路由key。被  :meth:`~@Task.retry`  方法使用，用来重发这个task到桐乡的目的队列中。这个映射表(字典)中可以使用的key依赖于使用的消息中间件
 
-:called_directly: This flag is set to true if the task was not
-                  executed by the worker.
+:called_directly: 如果这个task不是被worker执行，这个标志被设置为真。（译者注：和is_eager相关）.
 
-:callbacks: A list of subtasks to be called if this task returns successfully.
+:callbacks: subtasks的列表，如果这个task成功，这个列表中的subtask将被调用.
 
-:errback: A list of subtasks to be called if this task fails.
+:errback: subtasks的列表，如果这个task失败，这个列表中的subtask将被调用.
 
-:utc: Set to true the caller has utc enabled (:setting:`CELERY_ENABLE_UTC`).
+:utc: 如果调用者启用了UTC，那么这个标志设置为True(  :setting:`CELERY_ENABLE_UTC`  ).
 
 
 .. versionadded:: 3.1
 
-:headers:  Mapping of message headers (may be :const:`None`).
+:headers:   消息的headers（可能为`Nonoe`）.
 
-:reply_to:  Where to send reply to (queue name).
+:reply_to:   发送回复的目的地(队列名称).
 
 :correlation_id: Usually the same as the task id, often used in amqp
                  to keep track of what a reply is for.
 
 
-An example task accessing information in the context is:
+一个在访问上下文信息的样例task：
 
 .. code-block:: python
 
@@ -292,24 +248,19 @@ An example task accessing information in the context is:
         print('Executing task id {0.id}, args: {0.args!r} kwargs: {0.kwargs!r}'.format(
                 self.request))
 
+``bind`` 参数，意味着这个函数将成为一个"bound method"，所以你可以在一个task类型的实例中，访问它的属性和方法。
 
-The ``bind`` argument means that the function will be a "bound method" so
-that you can access attributes and methods on the task type instance.
 
 .. _task-logging:
 
-Logging
+logging
 =======
 
-The worker will automatically set up logging for you, or you can
-configure logging manually.
+worker将自动的为你建立logging，或者你可以手动的配置logging。
 
-A special logger is available named "celery.task", you can inherit
-from this logger to automatically get the task name and unique id as part
-of the logs.
+一个名为“celery.task”的特殊logger可以被使用，你可以继承这个logger，去自动获取task的名称、唯一task ID作为日志的一部分。
 
-The best practice is to create a common logger
-for all of your tasks at the top of your module:
+最佳实践是：在你模块的顶部，为你所有的tasks创建一个公共的logger：
 
 .. code-block:: python
 
@@ -322,13 +273,9 @@ for all of your tasks at the top of your module:
         logger.info('Adding {0} + {1}'.format(x, y))
         return x + y
 
-Celery uses the standard Python logger library,
-for which documentation can be found in the :mod:`logging`
-module.
+Celery 使用Python的标准logger库，你可以在  :mod:`logging`  模块中找到它的文档。
 
-You can also use :func:`print`, as anything written to standard
-out/-err will be redirected to the logging system (you can disable this,
-see :setting:`CELERY_REDIRECT_STDOUTS`).
+你也可以使用  :func:`print`  函数，任何写到标准输出和标注错误输出，都会被重定向到logging系统(你可以禁用这个特性，详情参见  :setting:`CELERY_REDIRECT_STDOUTS`  )
 
 .. note::
 
@@ -361,18 +308,14 @@ see :setting:`CELERY_REDIRECT_STDOUTS`).
 Retrying
 ========
 
-:meth:`~@Task.retry` can be used to re-execute the task,
-for example in the event of recoverable errors.
+:meth:`~@Task.retry`   方法可以用来重新执行这个task，例如发生了可恢复的错误。
 
-When you call ``retry`` it will send a new message, using the same
-task-id, and it will take care to make sure the message is delivered
-to the same queue as the originating task.
+当你调用``retry``方法的时候，它将发送一个新的消息，使用相同的task ID，并且它将保证这个新消息，被发送到和原task一样的队列中去。
 
-When a task is retried this is also recorded as a task state,
-so that you can track the progress of the task using the result
-instance (see :ref:`task-states`).
+一个task被重试的同时，也会被作为一个task状态(   :ref:`task-states`  )被记录。所以你可以追踪这个task的进度，使用result实例。
 
-Here's an example using ``retry``:
+
+这是一个使用``retry``的样例：
 
 .. code-block:: python
 
@@ -386,56 +329,45 @@ Here's an example using ``retry``:
 
 .. note::
 
-    The :meth:`~@Task.retry` call will raise an exception so any code after the retry
-    will not be reached.  This is the :exc:`~@Retry`
-    exception, it is not handled as an error but rather as a semi-predicate
-    to signify to the worker that the task is to be retried,
-    so that it can store the correct state when a result backend is enabled.
+    :meth:`~@Task.retry` 调用将会抛出一个异常，所以任何位于retry之后的代码都将不可达。
+    抛出的异常是 :exc:`~@Retry`，它不会被当做一个错误来处理，而是作为一个语义——告知worker
+    这个task将被重试。以便在启用了backend的时候，它能够存储正确的状态。
 
-    This is normal operation and always happens unless the
-    ``throw`` argument to retry is set to :const:`False`.
+    这是标准的操作流程，除非retry函数的``throw``参数被设置为 :const:`False`。
 
-The bind argument to the task decorator will give access to ``self`` (the
-task type instance).
+task装饰器的bind参数，给予了访问``self``(task实例)的能力。
 
-The ``exc`` method is used to pass exception information that is
-used in logs, and when storing task results.
-Both the exception and the traceback will
-be available in the task state (if a result backend is enabled).
+``exc``方法被用来传递异常信息——在日志记录以及存储task结果时使用。
+异常信息和traceback信息都将出现在task的状态中(如果启用的backend)
 
-If the task has a ``max_retries`` value the current exception
-will be re-raised if the max number of retries has been exceeded,
-but this will not happen if:
+如果这个task拥有``max_retries``属性，那么当达到最大重试次数时
+将会再次抛出当前的异常。除非以下几种情况：
 
-- An ``exc`` argument was not given.
+- ``exc`` 参数没有传入
 
-    In this case the :exc:`~@MaxRetriesExceeded`
-    exception will be raised.
+    在这种情况下 :exc:`~@MaxRetriesExceeded` 异常将会被抛出
 
-- There is no current exception
+- 当前无异常
 
-    If there's no original exception to re-raise the ``exc``
-    argument will be used instead, so:
+    假如当前没有原始异常(original exception)去再次抛出，``exc``参数将会被用来替代之，
+    所以：
 
     .. code-block:: python
 
         self.retry(exc=Twitter.LoginError())
 
-    will raise the ``exc`` argument given.
+    将会抛出``exc``参数传入的异常。
 
 .. _task-retry-custom-delay:
 
 Using a custom retry delay
 --------------------------
 
-When a task is to be retried, it can wait for a given amount of time
-before doing so, and the default delay is defined by the
-:attr:`~@Task.default_retry_delay`
-attribute. By default this is set to 3 minutes. Note that the
-unit for setting the delay is in seconds (int or float).
+当一个task触发了重试，它可以在执行重试操作前等待一段给定的时间，默认的延时时间被
+:attr:`~@Task.default_retry_delay` 属性定义。 默认情况这个值被设置为3分钟。
+注意这个延时时间配置的单位是秒（int 或 float）。
 
-You can also provide the `countdown` argument to :meth:`~@Task.retry` to
-override this default.
+你可以提供`countdown`参数给 :meth:`~@Task.retry` 去覆盖默认的延时时间。
 
 .. code-block:: python
 
@@ -452,13 +384,11 @@ override this default.
 List of Options
 ===============
 
-The task decorator can take a number of options that change the way
-the task behaves, for example you can set the rate limit for a task
-using the :attr:`rate_limit` option.
+task装饰器可以传入若干的选项，来改变这个task的行为。
+例如你可以使用 :attr:`rate_limit`选项来设置速率限制。
 
-Any keyword argument passed to the task decorator will actually be set
-as an attribute of the resulting task class, and this is a list
-of the built-in attributes.
+任何传递给task装饰器的关键字参数，实际上都将被设置为这个resulting task class的一个属性。
+这里提供了一份内建属性的列表。
 
 General
 -------
@@ -467,45 +397,41 @@ General
 
 .. attribute:: Task.name
 
-    The name the task is registered as.
+    这个task的注册名称。
 
-    You can set this name manually, or a name will be
-    automatically generated using the module and class name.  See
-    :ref:`task-names`.
+    你可以手动的设置这个名称，或者根据当前的module和class的名称自动生成。
+    参见 :ref:`task-names`。
 
 .. attribute:: Task.request
 
-    If the task is being executed this will contain information
-    about the current request.  Thread local storage is used.
+    如果这个task被执行，这个属性将包含和当前请求相关的一些信息。
+    采用的Thread local storage。
 
-    See :ref:`task-request-info`.
+    参见 :ref:`task-request-info`.
 
 .. attribute:: Task.abstract
 
-    Abstract classes are not registered, but are used as the
-    base class for new task types.
+    抽象类不会被注册，而是用做新的task类型的基类。
 
 .. attribute:: Task.max_retries
 
-    The maximum number of attempted retries before giving up.
-    If the number of retries exceeds this value a :exc:`~@MaxRetriesExceeded`
-    exception will be raised.  *NOTE:* You have to call :meth:`~@Task.retry`
-    manually, as it will not automatically retry on exception..
+    放弃这个task之前的最大重试尝试次数。
+    如果重试次数达到这个值，异常 :exc:`~@MaxRetriesExceeded` 将会被抛出。
+    *注意:* 由于在异常触发时不会自动重试，所以你必须手动调用 :meth:`~@Task.retry`。
 
-    The default value is 3.
-    A value of :const:`None` will disable the retry limit and the
-    task will retry forever until it succeeds.
+    默认值是3.
+    设置为 :const:`None` 将会禁用重试次数限制，即这个task将会一直重试直到成功。
 
 .. attribute:: Task.throws
 
+    预料中的异常类组成的可选元组——不应该被视作一个实际错误。
     Optional tuple of expected error classes that should not be regarded
     as an actual error.
 
-    Errors in this list will be reported as a failure to the result backend,
-    but the worker will not log the event as an error, and no traceback will
-    be included.
+    这个list中的异常，将被视作失败报告给result backend，
+    但是worker不会将其作为一个错误记录这个事件，并且没有任何的traceback信息被包含。
 
-    Example:
+    例如:
 
     .. code-block:: python
 
@@ -515,125 +441,111 @@ General
 
     Error types:
 
-    - Expected errors (in ``Task.throws``)
+    - 预期中的错误 (in ``Task.throws``)
+        以``INFO``级别记录，不包含traceback信息。
 
-        Logged with severity ``INFO``, traceback excluded.
+    - 非预期中的错误
 
-    - Unexpected errors
-
-        Logged with severity ``ERROR``, with traceback included.
+        以``ERROR``级别记录，包含traceback信息。
 
 .. attribute:: Task.trail
 
-    By default the task will keep track of subtasks called
-    (``task.request.children``), and this will be stored with the final result
-    in the result backend, available to the client via
-    ``AsyncResult.children``.
+    默认情况下，task将会记录被调用的subtask(``task.request.children``)。
+    并且，将会和最终结果一起被存储到result backend中，调用端可用的访问方式
+    ``AsyncResult.children``。
 
-    This list of task can grow quite big for tasks starting many subtasks,
-    and you can set this attribute to False to disable it.
+    这个list可能伴随启动大量的subtasks而变动十分庞大，你可以设置这个属性为False来禁用之。
 
 .. attribute:: Task.default_retry_delay
 
-    Default time in seconds before a retry of the task
-    should be executed.  Can be either :class:`int` or :class:`float`.
-    Default is a 3 minute delay.
+    以秒为单位的默认执行重试等待时间。可以为 :class:`int` 或 :class:`float`。
+    默认为3分钟的延时。
 
 .. attribute:: Task.rate_limit
 
-    Set the rate limit for this task type which limits the number of tasks
-    that can be run in a given time frame.  Tasks will still complete when
-    a rate limit is in effect, but it may take some time before it's allowed to
-    start.
+    为这个task类型设置速率限制，将会限制指定帧(frame)时间内可执行该tasks的数量。
+    当速率限制生效时，task仍然可以完成，但是可能会需要消耗一定的时间等待启动。
 
-    If this is :const:`None` no rate limit is in effect.
-    If it is an integer or float, it is interpreted as "tasks per second".
+    :const:`None`意味着无速率限制。
+    如果这是一个整数或浮点数，将会被解释为：“每秒任务数”。
 
-    The rate limits can be specified in seconds, minutes or hours
-    by appending `"/s"`, `"/m"` or `"/h"` to the value.  Tasks will be evenly
-    distributed over the specified time frame.
+    可以使用`"/s"`,`"/m"`,`"/h"`追加到数值后面，来指定为按秒、分、时进行速率限制。
+    task将会在指定的时间帧内，被均匀地配发出去。
 
-    Example: `"100/m"` (hundred tasks a minute). This will enforce a minimum
-    delay of 600ms between starting two tasks on the same worker instance.
+    例如： `"100/m"`(每分钟一百个task)。
+    将强制同一woker实例上的两个task的启动时间间隔不小于600ms。
 
-    Default is the :setting:`CELERY_DEFAULT_RATE_LIMIT` setting,
-    which if not specified means rate limiting for tasks is disabled by default.
+    默认是 :setting:`CELERY_DEFAULT_RATE_LIMIT` 配置，
+    如果没有特别的指出速率限制，默认将会被禁用速率限制。
 
-    Note that this is a *per worker instance* rate limit, and not a global
-    rate limit. To enforce a global rate limit (e.g. for an API with a
-    maximum number of  requests per second), you must restrict to a given
-    queue.
+    注意这是*每个worker实例*的速率限制，不是一个全局的速率限制。
+    开启一个全局的速率限制(比如：调用一个拥有每秒最大请求次数的API)，你必须限制到一个给定队列。
+    you must restrict to a given queue.
 
 .. attribute:: Task.time_limit
 
-    The hard time limit, in seconds, for this task.  If not set then the workers default
-    will be used.
+
+    这个task以秒为单位的hard执行限制时间（hard time limit）。
+    如果没有设置，将使用worker的默认值。
 
 .. attribute:: Task.soft_time_limit
 
-    The soft time limit for this task.  If not set then the workers default
-    will be used.
+    这个task以秒为单位的soft执行限制时间(soft time limit)。
+    如果没有设置，将使用worker的默认值。
 
 .. attribute:: Task.ignore_result
 
-    Don't store task state.    Note that this means you can't use
-    :class:`~celery.result.AsyncResult` to check if the task is ready,
-    or get its return value.
+    不存储task的状态。
+    注意：这意味着你不能使用 :class:`~celery.result.AsyncResult` 去检查这个task是否已经ready，
+    或者是去获得这个task的返回值。
 
 .. attribute:: Task.store_errors_even_if_ignored
 
-    If :const:`True`, errors will be stored even if the task is configured
-    to ignore results.
+    如果设置为 :const:`True`，即使这个task被配置为ignore result，也会存储errors信息。
 
 .. attribute:: Task.send_error_emails
 
-    Send an email whenever a task of this type fails.
-    Defaults to the :setting:`CELERY_SEND_TASK_ERROR_EMAILS` setting.
-    See :ref:`conf-error-mails` for more information.
+    发送email，每当这个类型的task执行失败的时候。
+    默认为 :setting:`CELERY_SEND_TASK_ERROR_EMAILS`  配置。
+    查阅 :ref:`conf-error-mails` 获取更多信息
 
 .. attribute:: Task.ErrorMail
 
-    If the sending of error emails is enabled for this task, then
+    如果这个task启用了send_error_emails，那么这是定义发送error mails逻辑的类。
     this is the class defining the logic to send error mails.
 
 .. attribute:: Task.serializer
 
-    A string identifying the default serialization
-    method to use. Defaults to the :setting:`CELERY_TASK_SERIALIZER`
-    setting.  Can be `pickle`, `json`, `yaml`, or any custom
-    serialization methods that have been registered with
-    :mod:`kombu.serialization.registry`.
+    一个字符串标记默认使用的序列化方法。
 
-    Please see :ref:`calling-serializers` for more information.
+    默认为 :setting:`CELERY_TASK_SERIALIZER` 配置。
+    可以是`picke`、`json`、`yaml`或者其他自定义的已经被注册到 :mod:`kombu.serialization.registry`的序列化方法。
+
+    查阅 :ref:`calling-serializers` 获取更多信息.
 
 .. attribute:: Task.compression
 
-    A string identifying the default compression scheme to use.
+    一个字符串，标记默认使用的压缩方案。
 
-    Defaults to the :setting:`CELERY_MESSAGE_COMPRESSION` setting.
-    Can be `gzip`, or `bzip2`, or any custom compression schemes
-    that have been registered with the :mod:`kombu.compression` registry.
+    默认为 :setting:`CELERY_MESSAGE_COMPRESSION`。
+    可以是`gzip`、`bzip2`、或者其他自定义的已经注册到 :mod:`kombu.compression` 注册表的压缩方案。
 
-    Please see :ref:`calling-compression` for more information.
+    查阅 :ref:`calling-compression` 获取更多信息。
 
 .. attribute:: Task.backend
 
-    The result store backend to use for this task. An instance of one of the
-    backend classes in `celery.backends`. Defaults to `app.backend` which is
-    defined by the :setting:`CELERY_RESULT_BACKEND` setting.
+    这个任务的结果的store backend。
+    默认为 :setting:`CELERY_RESULT_BACKEND` 配置。
 
 .. attribute:: Task.acks_late
 
-    If set to :const:`True` messages for this task will be acknowledged
-    **after** the task has been executed, not *just before*, which is
-    the default behavior.
+    如果设置为 :const:`True` ，这个task的消息将会在task*执行后*被确认，
+    而*不是开始前*（默认的行为。译者注：参照幂等）
 
-    Note that this means the task may be executed twice if the worker
-    crashes in the middle of execution, which may be acceptable for some
-    applications.
+    注意,这意味着个任务可能被执行两次,如果worker在执行中途崩溃，
+    可能这对于某些application来说是可以接受的。
 
-    The global default can be overridden by the :setting:`CELERY_ACKS_LATE`
-    setting.
+    全局的默认设置可以通过 :setting:`CELERY_ACKS_LATE` 来重写。
 
 .. _task-track-started:
 
@@ -694,31 +606,48 @@ Result Backends
 If you want to keep track of tasks or need the return values, then Celery
 must store or send the states somewhere so that they can be retrieved later.
 There are several built-in result backends to choose from: SQLAlchemy/Django ORM,
-Memcached, RabbitMQ/QPid (rpc), MongoDB, and Redis -- or you can define your own.
+Memcached, RabbitMQ (amqp), MongoDB, and Redis -- or you can define your own.
 
 No backend works well for every use case.
 You should read about the strengths and weaknesses of each backend, and choose
 the most appropriate for your needs.
 
+
 .. seealso::
 
     :ref:`conf-result-backend`
 
-RPC Result Backend (RabbitMQ/QPid)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RabbitMQ Result Backend
+~~~~~~~~~~~~~~~~~~~~~~~
 
-The RPC result backend (`rpc://`) is special as it does not actually *store*
+The RabbitMQ result backend (amqp) is special as it does not actually *store*
 the states, but rather sends them as messages.  This is an important difference as it
-means that a result *can only be retrieved once*, and *only by the client
-that initiated the task*. Two different processes can not wait for the same result.
+means that a result *can only be retrieved once*; If you have two processes
+waiting for the same result, one of the processes will never receive the
+result!
 
 Even with that limitation, it is an excellent choice if you need to receive
 state changes in real-time.  Using messaging means the client does not have to
 poll for new states.
 
-The messages are transient (non-persistent) by default, so the results will
-disappear if the broker restarts. You can configure the result backend to send
-persistent messages using the :setting:`CELERY_RESULT_PERSISTENT` setting.
+There are several other pitfalls you should be aware of when using the
+RabbitMQ result backend:
+
+* Every new task creates a new queue on the server, with thousands of tasks
+  the broker may be overloaded with queues and this will affect performance in
+  negative ways. If you're using RabbitMQ then each queue will be a separate
+  Erlang process, so if you're planning to keep many results simultaneously you
+  may have to increase the Erlang process limit, and the maximum number of file
+  descriptors your OS allows.
+
+* Old results will be cleaned automatically, based on the
+  :setting:`CELERY_TASK_RESULT_EXPIRES` setting.  By default this is set to
+  expire after 1 day: if you have a very busy cluster you should lower
+  this value.
+
+For a list of options supported by the RabbitMQ result backend, please see
+:ref:`conf-amqp-result-backend`.
+
 
 Database Result Backend
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -737,6 +666,7 @@ limitations.
   means the transaction will not see changes by other transactions until the
   transaction is committed.  It is recommended that you change to the
   `READ-COMMITTED` isolation level.
+
 
 .. _task-builtin-states:
 
@@ -1175,12 +1105,15 @@ Handlers
 
     The return value of this handler is ignored.
 
+on_retry
+~~~~~~~~
+
 .. _task-how-they-work:
 
 How it works
 ============
 
-Here come the technical details. This part isn't something you need to know,
+Here comes the technical details, this part isn't something you need to know,
 but you may be interested.
 
 All defined tasks are listed in a registry.  The registry contains
@@ -1307,7 +1240,7 @@ Make your design asynchronous instead, for example by using *callbacks*.
 
     def update_page_info(url):
         # fetch_page -> parse_page -> store_page
-        chain = fetch_page.s(url) | parse_page.s() | store_page_info.s(url)
+        chain = fetch_page.s() | parse_page.s() | store_page_info.s(url)
         chain()
 
     @app.task()
@@ -1339,8 +1272,8 @@ Granularity
 -----------
 
 The task granularity is the amount of computation needed by each subtask.
-In general it is better to split the problem up into many small tasks rather
-than have a few long running tasks.
+In general it is better to split the problem up into many small tasks, than
+have a few long running tasks.
 
 With smaller tasks you can process more tasks in parallel and the tasks
 won't run long enough to block the worker from processing other waiting tasks.
@@ -1508,7 +1441,7 @@ depending on state from the current transaction*:
 Example
 =======
 
-Let's take a real world example: a blog where comments posted need to be
+Let's take a real world example; A blog where comments posted needs to be
 filtered for spam.  When the comment is created, the spam filter runs in the
 background, so the user doesn't have to wait for it to finish.
 
