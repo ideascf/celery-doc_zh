@@ -1,8 +1,8 @@
 .. _guide-extending:
 
-==========================
- Extensions and Bootsteps
-==========================
+==================================
+ Extensions and Bootsteps（扩展以及启动步骤）
+==================================
 
 .. contents::
     :local:

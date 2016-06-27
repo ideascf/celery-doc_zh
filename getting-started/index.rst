@@ -1,6 +1,6 @@
-=================
- Getting Started
-=================
+=====================
+ Getting Started（入门指南）
+=====================
 
 :Release: |version|
 :Date: |today|

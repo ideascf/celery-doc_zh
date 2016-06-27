@@ -1,7 +1,7 @@
 .. _guide-canvas:
 
 =============================
- Canvas: Designing Workflows
+ Canvas: Designing Workflows(画板：设计工作流)
 =============================
 
 .. contents::

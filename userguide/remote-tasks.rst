@@ -1,8 +1,8 @@
 .. _guide-webhooks:
 
-================================
- HTTP Callback Tasks (Webhooks)
-================================
+======================================================
+ HTTP Callback Tasks (Webhooks)（HTTP回调任务(Webhooks)）
+======================================================
 
 .. module:: celery.task.http
 

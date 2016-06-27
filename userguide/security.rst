@@ -1,8 +1,8 @@
 .. _guide-security:
 
-==========
- Security
-==========
+==============
+ Security（安全）
+==============
 
 .. contents::
     :local:

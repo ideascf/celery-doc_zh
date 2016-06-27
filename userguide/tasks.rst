@@ -1,8 +1,8 @@
 .. _guide-tasks:
 
-=====
-Tasks
-=====
+=========
+Tasks(任务)
+=========
 
 Tasks are the building blocks of Celery applications.
 
