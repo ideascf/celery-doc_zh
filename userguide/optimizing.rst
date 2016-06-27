@@ -18,7 +18,7 @@ responsiveness at times of high load.
 Ensuring Operations
 ===================
 
-在`Programming Pearls`_书中，jon bentley 通过问下面的问题，提出了`back-of-the-envelope calculations` 理论:
+在 `Programming Pearls`_ 书中，jon bentley 通过问下面的问题，提出了 `back-of-the-envelope calculations` 理论:
 
     ❝ How much water flows out of the Mississippi River in a day? ❞
 
@@ -34,7 +34,7 @@ ahead of time.
 
 其中一种方案是使用:ref:`using Munin <monitoring-munin>`。
 你应该建立告警机制 —— 当队列长度到达一个不可接受的长度时，立即通知你。
-这样，你可以立即采取某种操作，比如：增加新的`worker`节点 或 移除不必要的任务。
+这样，你可以立即采取某种操作，比如：增加新的 `worker` 节点 或 移除不必要的任务。
 
 .. [*] The chapter is available to read for free here:
        `The back of the envelope`_.  The book is a classic text. Highly
